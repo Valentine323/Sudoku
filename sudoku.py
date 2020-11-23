@@ -16,7 +16,7 @@
 
 ## INCLUDES
 import numpy as np
-
+from itertools import combinations  
 
 
 ## CLASSES AND FUNCTIONS
@@ -36,28 +36,12 @@ class pole:
         else:
             self.Candids=np.delete(self.Candids,self.Candids==candid)
     def remove_exc(self,candid):
-        self.Candids=np.delete(self.Candids,np.where(self.Candids!=candid))
+        if isinstance(candid, np.ndarray):
+            for i in range(0, len(candid)): 
+                self.Candids=np.delete(self.Candids,self.Candids!=candid[i])
+        else:
+            self.Candids=np.delete(self.Candids,np.where(self.Candids!=candid))
                 
-# def is_unique_candid(puzzle,candidate,dim,which):
-#     if dim=='row' or dim=='r':
-#         for i in range(0,9):
-#             for k in range(0,len(puzzle[which][i].Candids-1)):
-#                 if candidate==puzzle[which][i].Candids[k]:
-#                     return False
-#         return True
-#     if dim=='col' or dim=='c':
-#         for i in range(0,9):
-#             for k in range(0,len(puzzle[i][which].Candids-1)):
-#                 if candidate==puzzle[i][which].Candids[k]:
-#                     return False
-#         return True
-#     if dim=='square' or dim=='s':
-#         for i in range(0,3):
-#             for j in range(0,3):
-#                 for k in range(0,len(puzzle[3*which[0]+i][3*which[1]+j].Candids-1)):
-#                     if candidate==puzzle[3*which[0]+i][3*which[1]+j].Candids[k]:
-#                         return False
-#         return True
 
 def puzzle_is_solved(puzzle):
     for r in range(0,9):
@@ -68,35 +52,55 @@ def puzzle_is_solved(puzzle):
     return True
 
 
-def hidden_single(puzzle, puzzle_cpy, position):
+def my_union(puzzle, how_many):
+    pass
+
+def hidden_single(puzzle, puzzle_cpy, position, dim):
     r,c=(position)
     if not puzzle[r][c].is_trivial():
         #in row
-        # if dim=='r' or dim=='row':
+        if dim=='r' or dim=='row':
             for i in range(0,9):
                 intersect=np.intersect1d(puzzle[r][c].Candids,puzzle[r][i].Candids)
                 union=np.union1d(puzzle[r][c].Candids,puzzle[r][i].Candids)
                 if len(union) == len(intersect)+1 and len(intersect)>0:
                     print(puzzle[r][c].Candids)
                     print(puzzle[r][i].Candids)
-                    puzzle_cpy[r][c].remove(intersect)
-                    puzzle_cpy[r][c].Value=puzzle_cpy[r][c].Candids[0]
-                    puzzle_cpy[r][c].remove(puzzle_cpy[r][c].Value)
-                    return
+                    if 'numbers' in locals() and numbers==intersect:# if its the same, add coordinate
+                        coords=np.vstack((coords,[r,i]))
+                    else:#initialize
+                        numbers=intersect
+                        coords=np.empty((0,2),dtype=np.uint8)
+                    
+            if 'numbers' in locals() and len(numbers)==len(puzzle[r][c].Candids)-1:
+                for i in range(0,np.shape(coords)[0]-1):
+                    puzzle[coords[i][0]][coords[i][1]].remove_exc(numbers)
+                puzzle[r][c].remove(numbers)
+                puzzle[r][c].Value=puzzle[r][c].Candids[0]
+                puzzle[r][c].remove(puzzle[r][c].Value)
+                        
         #in column
-        # if dim=='c' or dim=='col':
+        if dim=='c' or dim=='col':
             for i in range(0,9):
                 intersect=np.intersect1d(puzzle[r][c].Candids,puzzle[i][c].Candids)
                 union=np.union1d(puzzle[r][c].Candids,puzzle[i][c].Candids)
                 if len(union) == len(intersect)+1 and len(intersect)>0:
                     print(puzzle[r][c].Candids)
                     print(puzzle[i][c].Candids)
-                    puzzle_cpy[r][c].remove(intersect)
-                    puzzle_cpy[r][c].Value=puzzle_cpy[r][c].Candids[0]
-                    puzzle_cpy[r][c].remove(puzzle_cpy[r][c].Value)
-                    return
+                    if 'numbers' in locals() and numbers==intersect:# if its the same, add coordinate
+                        coords=np.vstack((coords,[i,c]))
+                    else:#initialize
+                        numbers=intersect
+                        coords=np.empty((0,2),dtype=np.uint8)
+                    
+            if 'numbers' in locals() and len(numbers)==len(puzzle[r][c].Candids)-1:
+                for i in range(0,np.shape(coords)[0]-1):
+                    puzzle[coords[i][0]][coords[i][1]].remove_exc(numbers)
+                puzzle[r][c].remove(numbers)
+                puzzle[r][c].Value=puzzle[r][c].Candids[0]
+                puzzle[r][c].remove(puzzle[r][c].Value)
         #in region
-        # if dim=='s' or dim=='square':
+        if dim=='s' or dim=='square':
             square_r=r//3
             square_c=c//3
             for i in range(0,3):
@@ -106,11 +110,58 @@ def hidden_single(puzzle, puzzle_cpy, position):
                     if len(union) == len(intersect)+1 and len(intersect)>0:
                         print(puzzle[r][c].Candids)
                         print(puzzle[3*square_r+i][3*square_c+j].Candids)
-                        puzzle_cpy[r][c].remove(intersect)
-                        puzzle_cpy[r][c].Value=puzzle_cpy[r][c].Candids[0]
-                        puzzle_cpy[r][c].remove(puzzle_cpy[r][c].Value) 
-                        return
+                        if 'numbers' in locals() and numbers==intersect:# if its the same, add coordinate
+                            coords=np.vstack((coords,[3*square_r+i][3*square_c+j]))
+                        else:#initialize
+                            numbers=intersect
+                            coords=np.empty((0,2),dtype=np.uint8)
+                        
+            if 'numbers' in locals() and len(numbers)==len(puzzle[r][c].Candids)-1:
+                for i in range(0,np.shape(coords)[0]-1):
+                    puzzle[coords[i][0]][coords[i][1]].remove_exc(numbers)
+                puzzle[r][c].remove(numbers)
+                puzzle[r][c].Value=puzzle[r][c].Candids[0]
+                puzzle[r][c].remove(puzzle[r][c].Value)
 
+def hidden_single_obsolete(puzzle, puzzle_cpy, position, dim):
+    r,c=(position)
+    if not puzzle[r][c].is_trivial():
+        #in row
+        for i in range(0,9):
+            intersect=np.intersect1d(puzzle[r][c].Candids,puzzle[r][i].Candids)
+            union=np.union1d(puzzle[r][c].Candids,puzzle[r][i].Candids)
+            if len(union) == len(intersect)+1 and len(intersect)>0: #unique value found
+                print(puzzle[r][c].Candids)
+                print(puzzle[r][i].Candids)
+                puzzle_cpy[r][c].remove(intersect)
+                puzzle_cpy[r][c].Value=puzzle_cpy[r][c].Candids[0]
+                puzzle_cpy[r][c].remove(puzzle_cpy[r][c].Value)
+                return
+        #in column
+        for i in range(0,9):
+            intersect=np.intersect1d(puzzle[r][c].Candids,puzzle[i][c].Candids)
+            union=np.union1d(puzzle[r][c].Candids,puzzle[i][c].Candids)
+            if len(union) == len(intersect)+1 and len(intersect)>0:
+                print(puzzle[r][c].Candids)
+                print(puzzle[i][c].Candids)
+                puzzle_cpy[r][c].remove(intersect)
+                puzzle_cpy[r][c].Value=puzzle_cpy[r][c].Candids[0]
+                puzzle_cpy[r][c].remove(puzzle_cpy[r][c].Value)
+                return
+        #in region
+            square_r=r//3
+            square_c=c//3
+        for i in range(0,3):
+            for j in range(0,3):
+                intersect=np.intersect1d(puzzle[r][c].Candids,puzzle[3*square_r+i][3*square_c+j].Candids)
+                union=np.union1d(puzzle[r][c].Candids,puzzle[3*square_r+i][3*square_c+j].Candids)
+                if len(union) == len(intersect)+1 and len(intersect)>0:
+                    print(puzzle[r][c].Candids)
+                    print(puzzle[3*square_r+i][3*square_c+j].Candids)
+                    puzzle_cpy[r][c].remove(intersect)
+                    puzzle_cpy[r][c].Value=puzzle_cpy[r][c].Candids[0]
+                    puzzle_cpy[r][c].remove(puzzle_cpy[r][c].Value) 
+                    return
 
 ## MAIN BODY   
         
@@ -174,7 +225,9 @@ while not puzzle_is_solved(puzzle) and counter<2:
     for r in range(0,9):
         for c in range(0,9):
             print(str(r)+'x'+str(c)+'\n')
-            hidden_single(puzzle,puzzle_cpy,(r,c))
+            hidden_single(puzzle,puzzle,(r,c),'r')
+            hidden_single(puzzle,puzzle,(r,c),'c')
+            hidden_single(puzzle,puzzle,(r,c),'s')
     
     print(counter)
     counter+=1
@@ -194,14 +247,10 @@ print(vstup)
 print('\n')
 
   
-vystup=np.ndarray((9,9),dtype=np.dtype('uint8'))   
-vystup_cpy=np.ndarray((9,9),dtype=np.dtype('uint8'))      
+vystup=np.ndarray((9,9),dtype=np.dtype('uint8'))      
 for i in range(0,9):
     for j in range(0,9):
         vystup[i][j]=puzzle[i][j].Value
-        vystup_cpy[i][j]=puzzle_cpy[i][j].Value
         
 print(vystup)
-print('\n')
-print(vystup_cpy)
 print('\n')
