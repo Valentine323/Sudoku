@@ -266,7 +266,10 @@ for i in range(0, 9):
         else:
             vystup[i][j] = 0
 
+print('vystup\n')
 print(vystup)
 print('\n')
+
+print('reseni\n')
 print(reseni)
 print('\n')
