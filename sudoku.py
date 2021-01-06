@@ -36,7 +36,7 @@ class pole:
 
     def remove(self, candid):
         if isinstance(candid, np.ndarray):
-            for i in range(0, len(candid)):
+            for i in range(len(candid)):
                 self.Candids = np.delete(self.Candids, self.Candids == candid[i])
         else:
             self.Candids = np.delete(self.Candids, self.Candids == candid)
@@ -50,8 +50,8 @@ class pole:
 
 
 def puzzle_is_solved(puzzle):
-    for r in range(0, 9):
-        for c in range(0, 9):
+    for r in range(9):
+        for c in range(9):
             if puzzle[r][c].Value == 0 or len(puzzle[r][c].Candids) > 0:
                 return False
 
@@ -62,7 +62,7 @@ def hidden_single(puzzle, puzzle_cpy, position, dim):
     if not puzzle[r][c].is_trivial():
         # in row
         if dim == 'r' or dim == 'row':
-            for i in range(0, 9):
+            for i in range(9):
                 # print(puzzle[r][i].Candids)
                 intersect = np.intersect1d(puzzle[r][c].Candids, puzzle[r][i].Candids)
                 union = np.union1d(puzzle[r][c].Candids, puzzle[r][i].Candids)
@@ -79,7 +79,7 @@ def hidden_single(puzzle, puzzle_cpy, position, dim):
             try:
                 coords
                 if coords.shape[0] == (len(puzzle[r][c].Candids) - 1):
-                    for i in range(0, np.shape(coords)[0] - 1):
+                    for i in range(np.shape(coords)[0] - 1):
                         puzzle[coords[i][0]][coords[i][1]].remove_exc(numbers)
                     # print(coords)
                     puzzle[r][c].remove(numbers)
@@ -90,7 +90,7 @@ def hidden_single(puzzle, puzzle_cpy, position, dim):
 
         # in column
         if dim == 'c' or dim == 'col':
-            for i in range(0, 9):
+            for i in range(9):
                 intersect = np.intersect1d(puzzle[r][c].Candids, puzzle[i][c].Candids)
                 union = np.union1d(puzzle[r][c].Candids, puzzle[i][c].Candids)
                 if len(union) == (len(intersect) + 1) and len(intersect) > 0 and len(puzzle[r][c].Candids) > len(puzzle[i][c].Candids):
@@ -106,7 +106,7 @@ def hidden_single(puzzle, puzzle_cpy, position, dim):
             try:
                 coords
                 if coords.shape[0] == (len(puzzle[r][c].Candids) - 1):
-                    for i in range(0, np.shape(coords)[0] - 1):
+                    for i in range(np.shape(coords)[0] - 1):
                         puzzle[coords[i][0]][coords[i][1]].remove_exc(numbers)
                     # print(coords)
                     puzzle[r][c].remove(numbers)
@@ -119,8 +119,8 @@ def hidden_single(puzzle, puzzle_cpy, position, dim):
         if dim == 's' or dim == 'square':
             square_r = r // 3
             square_c = c // 3
-            for i in range(0, 3):
-                for j in range(0, 3):
+            for i in range(3):
+                for j in range(3):
                     intersect = np.intersect1d(puzzle[r][c].Candids, puzzle[3 * square_r + i][3 * square_c + j].Candids)
                     union = np.union1d(puzzle[r][c].Candids, puzzle[3 * square_r + i][3 * square_c + j].Candids)
                     if len(union) == (len(intersect) + 1) and len(intersect) > 0 and len(puzzle[r][c].Candids) > len(puzzle[3 * square_r + i][3 * square_c + j].Candids):
@@ -137,7 +137,7 @@ def hidden_single(puzzle, puzzle_cpy, position, dim):
             try:
                 coords
                 if coords.shape[0] == (len(puzzle[r][c].Candids) - 1):
-                    for i in range(0, np.shape(coords)[0] - 1):
+                    for i in range(np.shape(coords)[0] - 1):
                         puzzle[coords[i][0]][coords[i][1]].remove_exc(numbers)
                     # print(coords)
                     puzzle[r][c].remove(numbers)
@@ -212,8 +212,8 @@ np.ndarray.resize(reseni, (9, 9))
 # create an array of classes
 puzzle = np.ndarray((9, 9), dtype=np.dtype(pole))
 # copying stuff to the array of classes
-for i in range(0, 9):
-    for j in range(0, 9):
+for i in range(9):
+    for j in range(9):
         puzzle[i][j] = pole(vstup[i][j])
 
 ## SOLVING STEPS
@@ -223,39 +223,43 @@ counter = 1
 while not puzzle_is_solved(puzzle) and counter < 2:
 
     # Purging candidates
-    for r in range(0, 9):
-        for c in range(0, 9):
+    for r in range(9):
+        for c in range(9):
             if puzzle[r][c].Value is not None:
-                for i in range(0, 9):
+                for i in range(9):
+                    print('From {} row {} column deleted {}'.format(i, c, puzzle[r][c].Value),end='')
+                    print(' From {} row {} column deleted {}'.format(r, i, puzzle[r][c].Value),end='')
                     puzzle[i][c].remove(puzzle[r][c].Value)
-                for i in range(0, 9):
-                    puzzle[i][c].remove(puzzle[r][c].Value)
+                    puzzle[r][i].remove(puzzle[r][c].Value)
+                    print('\n')
                 squares_r = r // 3
                 squares_c = c // 3
-                for i in range(0, 3):
-                    for j in range(0, 3):
+                for i in range(3):
+                    for j in range(3):
                         puzzle[3 * squares_r + i][3 * squares_c + j].remove(puzzle[r][c].Value)
+                        print('From {} row {} column deleted {}\n'.format(3 * squares_r + i, 3 * squares_c + j, puzzle[r][c].Value))
+
 
     # Filling singles
     #theoretically it could go in the for cycles above with an elif
-    for r in range(0, 9):
-        for c in range(0, 9):
-            if puzzle[r][c].is_trivial():
-                puzzle[r][c].set(puzzle[r][c].Candids[0])
+    # for r in range(9):
+    #     for c in range(9):
+    #         if puzzle[r][c].is_trivial():
+    #             puzzle[r][c].set(puzzle[r][c].Candids[0])
 
-    for r in range(0, 9):
-        for c in range(0, 9):
-            print(str([r,c])+':'+str(puzzle[r][c].Candids)+'\n')
+    # for r in range(9):
+    #     for c in range(9):
+    #         print(str([r,c])+':'+str(puzzle[r][c].Candids)+'\n')
 
 
     # Filling hidden singles
     # puzzle_cpy = np.copy(puzzle)
-    for r in range(0, 9):
-        for c in range(0, 9):
-            print(str(r) + 'x' + str(c) + '\n')
-            hidden_single(puzzle, puzzle, (r, c), 'r')
-            hidden_single(puzzle, puzzle, (r, c), 'c')
-            hidden_single(puzzle, puzzle, (r, c), 's')
+    # for r in range(9):
+    #     for c in range(9):
+    #         print(str(r) + 'x' + str(c) + '\n')
+    #         hidden_single(puzzle, puzzle, (r, c), 'r')
+    #         hidden_single(puzzle, puzzle, (r, c), 'c')
+    #         hidden_single(puzzle, puzzle, (r, c), 's')
 
     counter += 1
 
@@ -266,8 +270,8 @@ print(vstup)
 print('\n')
 
 vystup = np.ndarray((9, 9), dtype=np.dtype('uint8'))
-for i in range(0, 9):
-    for j in range(0, 9):
+for i in range(9):
+    for j in range(9):
         if puzzle[i][j].Value is not None:
             vystup[i][j] = puzzle[i][j].Value
         else:
@@ -280,3 +284,20 @@ print('\n')
 print('reseni\n')
 print(reseni)
 print('\n')
+
+
+#PRINTING ALL CANDIDS TO SEE BETTER
+print('CANDIDS\n')
+for i in range(9):
+    for j in range(9):
+        c=len(puzzle[i][j].Candids)
+        if c:
+            for k in range(9):
+                if c-k-1 > 0:
+                    print(puzzle[i][j].Candids[k], end='')
+                else:
+                    print('_', end='')
+            print('\t', end='')
+        else:
+            print(str(puzzle[i][j].Value)+'________\t', end='')
+    print('\n')
