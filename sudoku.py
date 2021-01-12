@@ -181,24 +181,25 @@ def naked_pair(puzzle, coordinates):#algoritm for naked pairs (see: https://www.
         for i in range(3):
             for j in range(3):
                 #if the two,three,four... cells have the same candidades
-                if np.array_equal(puzzle[r][c].Candids, puzzle[3 * square_r + i, 3 * square_c + j].Candids) and (3 * square_r + i)!=r and (3 * square_c + j)!=c :
+                if np.array_equal(puzzle[r][c].Candids, puzzle[3 * square_r + i, 3 * square_c + j].Candids):
                     try:
                         coords
                         coords = np.vstack((coords, [3 * square_r + i, 3 * square_c + j]))
                     except NameError:
                         coords = np.empty((0, 2), dtype=np.uint8)
+                        coords = np.vstack((coords, [3 * square_r + i, 3 * square_c + j]))
         try:
             coords#if there were cells with same candidates found
             #if there is as many cells with the same candidates as there are candidates (2 same candidates in 2 cells in 1 group, 3same candidates in 3 cells... etc.)
-            if coords.shape[0] == len(puzzle[r][c].Candids)-1:
+            if coords.shape[0] == len(puzzle[r][c].Candids):
                 for i in range(3):
                     for j in range(3):
-                        if not np.any(np.all(np.isin(coords,[i,j]), axis=1), axis=0):#kdyz pole neni jedno z poli, ktere byly nalezeny vyse, tak vymaz kandydaty
-                            puzzle[i][j].remove(puzzle[r][c].Candids)
-                print('HAH')
+                        if not ((coords == [3 * square_r + i, 3 * square_c + j]).all(axis=1)).any() and len(puzzle[3 * square_r + i][3 * square_c + j].Candids)>0:#if cell is not one of those, which contain the candidates
+                            # print('From position [{}][{}]  Deleted candids:{}'.format(3 * square_r + i, 3 * square_c + j, puzzle[r][c].Candids))
+                            puzzle[3 * square_r + i][3 * square_c + j].remove(puzzle[r][c].Candids)#remove candidates
         except NameError:
             pass
-    else:  # if the cell is trivial, set its value
+    else:  # if the cell is trivial, set its value  ----- IF AN ERROR OCCURES IN THE FUTURE - CHECK THIS
         # print('row:{} col:{}'.format(r,c))
         if np.isnan(puzzle[r][c].Value):
             puzzle[r][c].set(puzzle[r][c].Candids[0])
@@ -254,12 +255,12 @@ while not puzzle_is_solved(puzzle) and counter < 20:
 
     # Filling hidden singles
     # puzzle_cpy = np.copy(puzzle)
-    # for r in range(9):
-    #     for c in range(9):
-    #         # print(str(r) + 'x' + str(c) + '\n')
-    #         hidden_single(puzzle, (r, c), 'r')
-    #         hidden_single(puzzle, (r, c), 'c')
-    #         hidden_single(puzzle, (r, c), 's')
+    for r in range(9):
+        for c in range(9):
+            # print(str(r) + 'x' + str(c) + '\n')
+            hidden_single(puzzle, (r, c), 'r')
+            hidden_single(puzzle, (r, c), 'c')
+            hidden_single(puzzle, (r, c), 's')
 
 
     # Naked pairs
