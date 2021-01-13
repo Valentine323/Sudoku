@@ -219,6 +219,7 @@ def pointing_pairs(puzzle, scoordinates):
     row_unique = np.setxor1d(np.setxor1d(r1, r2), r3)
 
     if col_unique.size != 0:
+        print(col_unique)
         print('deleted from col')
         for p in range(len(col_unique)-1):
             if np.isin(c1,col_unique[p]).any():
@@ -231,6 +232,7 @@ def pointing_pairs(puzzle, scoordinates):
                 if i<3*r or i>3*r+2:
                     puzzle[i][3*c+subcol].remove(col_unique)
     if row_unique.size != 0:
+        print(row_unique)
         print('deleted from row')
         for p in range(len(col_unique)-1):
             if np.isin(c1,col_unique[p]).any():
