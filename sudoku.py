@@ -204,6 +204,45 @@ def naked_pair(puzzle, coordinates):#algoritm for naked pairs (see: https://www.
         if np.isnan(puzzle[r][c].Value):
             puzzle[r][c].set(puzzle[r][c].Candids[0])
 
+def pointing_pairs(puzzle, scoordinates):
+    r, c = scoordinates
+    #cols
+    c1 = np.intersect1d(np.intersect1d(puzzle[3 * r][3 * c].Candids, puzzle[3 * r + 1][3 * c].Candids), puzzle[3 * r + 2][3 * c].Candids)
+    c2 = np.intersect1d(np.intersect1d(puzzle[3 * r][3 * c + 1].Candids, puzzle[3 * r + 1][3 * c + 1].Candids), puzzle[3 * r + 2][3 * c + 1].Candids)
+    c3 = np.intersect1d(np.intersect1d(puzzle[3 * r][3 * c + 2].Candids, puzzle[3 * r + 1][3 * c + 2].Candids), puzzle[3 * r + 2][3 * c + 2].Candids)
+    col_unique = np.setxor1d(np.setxor1d(c1, c2), c3)
+
+    #rows
+    r1 = np.intersect1d(np.intersect1d(puzzle[3 * r][3 * c].Candids, puzzle[3 * r][3 * c + 1].Candids), puzzle[3 * r][3 * c + 2].Candids)
+    r2 = np.intersect1d(np.intersect1d(puzzle[3 * r + 1][3 * c].Candids, puzzle[3 * r + 1][3 * c + 1].Candids), puzzle[3 * r + 1][3 * c + 2].Candids)
+    r3 = np.intersect1d(np.intersect1d(puzzle[3 * r + 2][3 * c].Candids, puzzle[3 * r + 2][3 * c + 1].Candids), puzzle[3 * r + 2][3 * c + 2].Candids)
+    row_unique = np.setxor1d(np.setxor1d(r1, r2), r3)
+
+    if col_unique.size != 0:
+        print('deleted from col')
+        for p in range(len(col_unique)-1):
+            if np.isin(c1,col_unique[p]).any():
+                subcol=0
+            if np.isin(c2, col_unique[p]).any():
+                subcol=1
+            if np.isin(c3, col_unique[p]).any():
+                subcol=2
+            for i in range(9):
+                if i<3*r or i>3*r+2:
+                    puzzle[i][3*c+subcol].remove(col_unique)
+    if row_unique.size != 0:
+        print('deleted from row')
+        for p in range(len(col_unique)-1):
+            if np.isin(c1,col_unique[p]).any():
+                subrow=0
+            if np.isin(c2, col_unique[p]).any():
+                subrow=1
+            if np.isin(c3, col_unique[p]).any():
+                subrow=2
+            for i in range(9):
+                if i<3*c or i>3*c+2:
+                    puzzle[r+subrow][i].remove(row_unique)
+
 ## MAIN BODY
 
 ## PREPARATION STEPS
@@ -255,19 +294,23 @@ while not puzzle_is_solved(puzzle) and counter < 20:
 
     # Filling hidden singles
     # puzzle_cpy = np.copy(puzzle)
-    for r in range(9):
-        for c in range(9):
-            # print(str(r) + 'x' + str(c) + '\n')
-            hidden_single(puzzle, (r, c), 'r')
-            hidden_single(puzzle, (r, c), 'c')
-            hidden_single(puzzle, (r, c), 's')
+    # for r in range(9):
+    #     for c in range(9):
+    #         # print(str(r) + 'x' + str(c) + '\n')
+    #         hidden_single(puzzle, (r, c), 'r')
+    #         hidden_single(puzzle, (r, c), 'c')
+    #         hidden_single(puzzle, (r, c), 's')
 
 
     # Naked pairs
-    for i in range(9):
-        for j in range(9):
-            naked_pair(puzzle, (i, j))
+    # for i in range(9):
+    #     for j in range(9):
+    #         naked_pair(puzzle, (i, j))
 
+    # Pointing pairs
+    for i in range(3):
+        for j in range(3):
+            pointing_pairs(puzzle, [i,j])
     counter += 1
 
 # printing result
