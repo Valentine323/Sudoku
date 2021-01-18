@@ -207,50 +207,81 @@ def naked_pair(puzzle, coordinates):#algoritm for naked pairs (see: https://www.
 def pointing_pairs(puzzle, scoordinates):
     r, c = scoordinates
     #cols
-    c1 = np.intersect1d(np.intersect1d(puzzle[3 * r][3 * c].Candids, puzzle[3 * r + 1][3 * c].Candids), puzzle[3 * r + 2][3 * c].Candids)
-    c2 = np.intersect1d(np.intersect1d(puzzle[3 * r][3 * c + 1].Candids, puzzle[3 * r + 1][3 * c + 1].Candids), puzzle[3 * r + 2][3 * c + 1].Candids)
-    c3 = np.intersect1d(np.intersect1d(puzzle[3 * r][3 * c + 2].Candids, puzzle[3 * r + 1][3 * c + 2].Candids), puzzle[3 * r + 2][3 * c + 2].Candids)
-    col_unique = np.setxor1d(np.setxor1d(c1, c2), c3)
+    ic1 = np.intersect1d(np.intersect1d(puzzle[3 * r][3 * c].Candids, puzzle[3 * r + 1][3 * c].Candids), puzzle[3 * r + 2][3 * c].Candids)
+    ic2 = np.intersect1d(np.intersect1d(puzzle[3 * r][3 * c + 1].Candids, puzzle[3 * r + 1][3 * c + 1].Candids), puzzle[3 * r + 2][3 * c + 1].Candids)
+    ic3 = np.intersect1d(np.intersect1d(puzzle[3 * r][3 * c + 2].Candids, puzzle[3 * r + 1][3 * c + 2].Candids), puzzle[3 * r + 2][3 * c + 2].Candids)
+    uc1 = np.union1d(np.union1d(puzzle[3 * r][3 * c].Candids, puzzle[3 * r + 1][3 * c].Candids), puzzle[3 * r + 2][3 * c].Candids)
+    uc2 = np.union1d(np.union1d(puzzle[3 * r][3 * c + 1].Candids, puzzle[3 * r + 1][3 * c + 1].Candids), puzzle[3 * r + 2][3 * c + 1].Candids)
+    uc3 = np.union1d(np.union1d(puzzle[3 * r][3 * c + 2].Candids, puzzle[3 * r + 1][3 * c + 2].Candids), puzzle[3 * r + 2][3 * c + 2].Candids)
+    uc12 = np.union1d(uc1, uc2)
+    uc23 = np.union1d(uc2, uc3)
+    uc31 = np.union1d(uc3, uc1)
 
     #rows
-    r1 = np.intersect1d(np.intersect1d(puzzle[3 * r][3 * c].Candids, puzzle[3 * r][3 * c + 1].Candids), puzzle[3 * r][3 * c + 2].Candids)
-    r2 = np.intersect1d(np.intersect1d(puzzle[3 * r + 1][3 * c].Candids, puzzle[3 * r + 1][3 * c + 1].Candids), puzzle[3 * r + 1][3 * c + 2].Candids)
-    r3 = np.intersect1d(np.intersect1d(puzzle[3 * r + 2][3 * c].Candids, puzzle[3 * r + 2][3 * c + 1].Candids), puzzle[3 * r + 2][3 * c + 2].Candids)
-    row_unique = np.setxor1d(np.setxor1d(r1, r2), r3)
+    ir1 = np.intersect1d(np.intersect1d(puzzle[3 * r][3 * c].Candids, puzzle[3 * r][3 * c + 1].Candids), puzzle[3 * r][3 * c + 2].Candids)
+    ir2 = np.intersect1d(np.intersect1d(puzzle[3 * r + 1][3 * c].Candids, puzzle[3 * r + 1][3 * c + 1].Candids), puzzle[3 * r + 1][3 * c + 2].Candids)
+    ir3 = np.intersect1d(np.intersect1d(puzzle[3 * r + 2][3 * c].Candids, puzzle[3 * r + 2][3 * c + 1].Candids), puzzle[3 * r + 2][3 * c + 2].Candids)
+    ur1 = np.union1d(np.union1d(puzzle[3 * r][3 * c].Candids, puzzle[3 * r][3 * c + 1].Candids),puzzle[3 * r][3 * c + 2].Candids)
+    ur2 = np.union1d(np.union1d(puzzle[3 * r + 1][3 * c].Candids, puzzle[3 * r + 1][3 * c + 1].Candids),puzzle[3 * r + 1][3 * c + 2].Candids)
+    ur3 = np.union1d(np.union1d(puzzle[3 * r + 2][3 * c].Candids, puzzle[3 * r + 2][3 * c + 1].Candids),puzzle[3 * r + 2][3 * c + 2].Candids)
+    ur12 = np.union1d(ur1, ur2)
+    ur23 = np.union1d(ur2, ur3)
+    ur31 = np.union1d(ur3, ur1)
 
-    if col_unique.size != 0:
-        print(col_unique)
-        print('deleted from col')
-        for p in range(len(col_unique)-1):
-            if np.isin(c1,col_unique[p]).any():
-                subcol=0
-            if np.isin(c2, col_unique[p]).any():
-                subcol=1
-            if np.isin(c3, col_unique[p]).any():
-                subcol=2
+    if (ic1.size > 0) | (ic1.size > 0) | (ic3.size > 0):
+        if np.intersect1d(ic1, uc23).size == 0 and ic1.size > 0:
+            print('deleted from col')
+            subcol=0
+            col_unique=ic1
+        if np.intersect1d(ic2, uc31).size == 0 and ic2.size > 0:
+            print('deleted from col')
+            subcol=1
+            col_unique=ic2
+        if np.intersect1d(ic3, uc12).size == 0 and ic3.size > 0:
+            print('deleted from col')
+            subcol=2
+            col_unique=ic3
+        try:
+            col_unique
             for i in range(9):
                 if i<3*r or i>3*r+2:
                     puzzle[i][3*c+subcol].remove(col_unique)
-    if row_unique.size != 0:
-        print(row_unique)
-        print('deleted from row')
-        for p in range(len(col_unique)-1):
-            if np.isin(c1,col_unique[p]).any():
-                subrow=0
-            if np.isin(c2, col_unique[p]).any():
-                subrow=1
-            if np.isin(c3, col_unique[p]).any():
-                subrow=2
+                    print([i, 3 * c + subcol])
+            print(col_unique)
+            del col_unique
+        except NameError:
+            pass
+
+    if (ir1.size > 0) | (ir2.size > 0) | (ir3.size > 0):
+        if np.intersect1d(ir1, ur23).size == 0 and ir1.size > 0:
+            print('deleted from row')
+            subrow=0
+            row_unique=ir1
+        if np.intersect1d(ir2, ur31).size == 0 and ir2.size > 0:
+            print('deleted from row')
+            subrow=1
+            row_unique=ir2
+        if np.intersect1d(ir3, ur12).size == 0 and ir3.size > 0:
+            print('deleted from row')
+            subrow=2
+            row_unique=ir3
+        try:
+            row_unique
             for i in range(9):
                 if i<3*c or i>3*c+2:
                     puzzle[r+subrow][i].remove(row_unique)
+                    print([r+subrow, i])
+            print(row_unique)
+            del row_unique
+        except NameError:
+            pass
 
 ## MAIN BODY
 
 ## PREPARATION STEPS
 # reading in the file
-f = open('sudoku3.txt', 'r')
-s = open('solution3.txt','r')
+f = open('sudoku2.txt', 'r')
+s = open('solution2.txt','r')
 # removing separators
 sequence_in = f.read().replace('\n', '').replace(' ', '').replace(',', '').replace(';', '')
 f.close()
@@ -277,7 +308,7 @@ for i in range(9):
 
 
 counter = 1
-while not puzzle_is_solved(puzzle) and counter < 20:
+while not puzzle_is_solved(puzzle) and counter < 2:
 
     # Purging candidates
     purge_candids(puzzle)
@@ -308,6 +339,22 @@ while not puzzle_is_solved(puzzle) and counter < 20:
     # for i in range(9):
     #     for j in range(9):
     #         naked_pair(puzzle, (i, j))
+
+    print('CANDIDS\n')
+    for i in range(9):
+        for j in range(9):
+            c = len(puzzle[i][j].Candids)
+            if c:
+                for k in range(9):
+                    if c - k > 0:
+                        print(puzzle[i][j].Candids[k], end='')
+                    else:
+                        print('_', end='')
+                print('\t', end='')
+            else:
+                print(str(puzzle[i][j].Value) + '!______\t', end='')
+        print('\n')
+
 
     # Pointing pairs
     for i in range(3):
