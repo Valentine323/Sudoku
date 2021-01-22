@@ -10,7 +10,6 @@
 ## INCLUDES
 import numpy as np
 
-
 ## CLASSES AND FUNCTIONS
 
 class pole:#class in which all the data about the sudoku cell is stored - values, candidates
@@ -50,8 +49,8 @@ def hidden_single(puzzle, position, dim):#algoritm for hidden single (see: https
         # in row
         if dim == 'r' or dim == 'row':
             for i in range(9):
-                intersect = np.intersect1d(puzzle[r][c].Candids, puzzle[r][i].Candids,True)#intersection of candidates
-                union = np.union1d(puzzle[r][c].Candids, puzzle[r][i].Candids,True)#union of candidates
+                intersect = np.intersect1d(puzzle[r][c].Candids, puzzle[r][i].Candids)#intersection of candidates
+                union = np.union1d(puzzle[r][c].Candids, puzzle[r][i].Candids)#union of candidates
                 #if union has +1 element, it means, that we have found a hidden single
                 # other conditions for safety reasons: the intersection cant be empty, the examined cell must have that one candidate more, in order for this function to work properly
                 if len(union) == (len(intersect) + 1) and len(intersect) > 0 and len(puzzle[r][c].Candids) > len(puzzle[r][i].Candids):
@@ -76,8 +75,8 @@ def hidden_single(puzzle, position, dim):#algoritm for hidden single (see: https
         # in column
         if dim == 'c' or dim == 'col':
             for i in range(9):
-                intersect = np.intersect1d(puzzle[r][c].Candids, puzzle[i][c].Candids,True)
-                union = np.union1d(puzzle[r][c].Candids, puzzle[i][c].Candids,True)
+                intersect = np.intersect1d(puzzle[r][c].Candids, puzzle[i][c].Candids)
+                union = np.union1d(puzzle[r][c].Candids, puzzle[i][c].Candids)
                 if len(union) == (len(intersect) + 1) and len(intersect) > 0 and len(puzzle[r][c].Candids) > len(puzzle[i][c].Candids):
                     try:
                         numbers
@@ -101,8 +100,8 @@ def hidden_single(puzzle, position, dim):#algoritm for hidden single (see: https
             square_c = c // 3
             for i in range(3):
                 for j in range(3):
-                    intersect = np.intersect1d(puzzle[r][c].Candids, puzzle[3 * square_r + i][3 * square_c + j].Candids,True)
-                    union = np.union1d(puzzle[r][c].Candids, puzzle[3 * square_r + i][3 * square_c + j].Candids,True)
+                    intersect = np.intersect1d(puzzle[r][c].Candids, puzzle[3 * square_r + i][3 * square_c + j].Candids)
+                    union = np.union1d(puzzle[r][c].Candids, puzzle[3 * square_r + i][3 * square_c + j].Candids)
                     if len(union) == (len(intersect) + 1) and len(intersect) > 0 and len(puzzle[r][c].Candids) > len(puzzle[3 * square_r + i][3 * square_c + j].Candids):
                         try:
                             numbers
@@ -172,136 +171,161 @@ def naked_pair(puzzle, coordinates):#algoritm for naked pairs (see: https://www.
     #         puzzle[r][c].set(puzzle[r][c].Candids[0])
 
 def pointing_pairs(puzzle, scoordinates):
-    r, c = scoordinates
+    r, c = scoordinates #getting the position of the group (larger squares)
     #cols
-    ic1 = np.intersect1d(np.intersect1d(puzzle[3 * r][3 * c].Candids, puzzle[3 * r + 1][3 * c].Candids,True), puzzle[3 * r + 2][3 * c].Candids,True)
-    ic2 = np.intersect1d(np.intersect1d(puzzle[3 * r][3 * c + 1].Candids, puzzle[3 * r + 1][3 * c + 1].Candids,True), puzzle[3 * r + 2][3 * c + 1].Candids,True)
-    ic3 = np.intersect1d(np.intersect1d(puzzle[3 * r][3 * c + 2].Candids, puzzle[3 * r + 1][3 * c + 2].Candids,True), puzzle[3 * r + 2][3 * c + 2].Candids,True)
-    uc1 = np.union1d(np.union1d(puzzle[3 * r][3 * c].Candids, puzzle[3 * r + 1][3 * c].Candids,True), puzzle[3 * r + 2][3 * c].Candids,True)
-    uc2 = np.union1d(np.union1d(puzzle[3 * r][3 * c + 1].Candids, puzzle[3 * r + 1][3 * c + 1].Candids,True), puzzle[3 * r + 2][3 * c + 1].Candids,True)
-    uc3 = np.union1d(np.union1d(puzzle[3 * r][3 * c + 2].Candids, puzzle[3 * r + 1][3 * c + 2].Candids,True), puzzle[3 * r + 2][3 * c + 2].Candids,True)
-    uc12 = np.union1d(uc1, uc2,True)
-    uc23 = np.union1d(uc2, uc3,True)
-    uc31 = np.union1d(uc3, uc1,True)
+    #getting the intersection of candids in each column
+    ic1 = np.intersect1d(np.intersect1d(puzzle[3 * r][3 * c].Candids, puzzle[3 * r + 1][3 * c].Candids, True), puzzle[3 * r + 2][3 * c].Candids, True)
+    ic2 = np.intersect1d(np.intersect1d(puzzle[3 * r][3 * c + 1].Candids, puzzle[3 * r + 1][3 * c + 1].Candids, True), puzzle[3 * r + 2][3 * c + 1].Candids, True)
+    ic3 = np.intersect1d(np.intersect1d(puzzle[3 * r][3 * c + 2].Candids, puzzle[3 * r + 1][3 * c + 2].Candids, True), puzzle[3 * r + 2][3 * c + 2].Candids, True)
+    #getting the union of candids in each column
+    uc1 = np.union1d(np.union1d(puzzle[3 * r][3 * c].Candids, puzzle[3 * r + 1][3 * c].Candids), puzzle[3 * r + 2][3 * c].Candids)
+    uc2 = np.union1d(np.union1d(puzzle[3 * r][3 * c + 1].Candids, puzzle[3 * r + 1][3 * c + 1].Candids), puzzle[3 * r + 2][3 * c + 1].Candids)
+    uc3 = np.union1d(np.union1d(puzzle[3 * r][3 * c + 2].Candids, puzzle[3 * r + 1][3 * c + 2].Candids), puzzle[3 * r + 2][3 * c + 2].Candids)
+    #getting the union of each combination of pairs of unions
+    uc12 = np.union1d(uc1, uc2)
+    uc23 = np.union1d(uc2, uc3)
+    uc31 = np.union1d(uc3, uc1)
 
     #rows
-    ir1 = np.intersect1d(np.intersect1d(puzzle[3 * r][3 * c].Candids, puzzle[3 * r][3 * c + 1].Candids,True), puzzle[3 * r][3 * c + 2].Candids,True)
-    ir2 = np.intersect1d(np.intersect1d(puzzle[3 * r + 1][3 * c].Candids, puzzle[3 * r + 1][3 * c + 1].Candids,True), puzzle[3 * r + 1][3 * c + 2].Candids,True)
-    ir3 = np.intersect1d(np.intersect1d(puzzle[3 * r + 2][3 * c].Candids, puzzle[3 * r + 2][3 * c + 1].Candids,True), puzzle[3 * r + 2][3 * c + 2].Candids,True)
-    ur1 = np.union1d(np.union1d(puzzle[3 * r][3 * c].Candids, puzzle[3 * r][3 * c + 1].Candids,True),puzzle[3 * r][3 * c + 2].Candids,True)
-    ur2 = np.union1d(np.union1d(puzzle[3 * r + 1][3 * c].Candids, puzzle[3 * r + 1][3 * c + 1].Candids,True),puzzle[3 * r + 1][3 * c + 2].Candids,True)
-    ur3 = np.union1d(np.union1d(puzzle[3 * r + 2][3 * c].Candids, puzzle[3 * r + 2][3 * c + 1].Candids,True),puzzle[3 * r + 2][3 * c + 2].Candids,True)
-    ur12 = np.union1d(ur1, ur2,True)
-    ur23 = np.union1d(ur2, ur3,True)
-    ur31 = np.union1d(ur3, ur1,True)
+    #getting the intersection of candids in each row
+    ir1 = np.intersect1d(np.intersect1d(puzzle[3 * r][3 * c].Candids, puzzle[3 * r][3 * c + 1].Candids, True), puzzle[3 * r][3 * c + 2].Candids, True)
+    ir2 = np.intersect1d(np.intersect1d(puzzle[3 * r + 1][3 * c].Candids, puzzle[3 * r + 1][3 * c + 1].Candids, True), puzzle[3 * r + 1][3 * c + 2].Candids, True)
+    ir3 = np.intersect1d(np.intersect1d(puzzle[3 * r + 2][3 * c].Candids, puzzle[3 * r + 2][3 * c + 1].Candids, True), puzzle[3 * r + 2][3 * c + 2].Candids, True)
+    #getting the union of candids in each row
+    ur1 = np.union1d(np.union1d(puzzle[3 * r][3 * c].Candids, puzzle[3 * r][3 * c + 1].Candids),puzzle[3 * r][3 * c + 2].Candids)
+    ur2 = np.union1d(np.union1d(puzzle[3 * r + 1][3 * c].Candids, puzzle[3 * r + 1][3 * c + 1].Candids),puzzle[3 * r + 1][3 * c + 2].Candids)
+    ur3 = np.union1d(np.union1d(puzzle[3 * r + 2][3 * c].Candids, puzzle[3 * r + 2][3 * c + 1].Candids),puzzle[3 * r + 2][3 * c + 2].Candids)
+    #getting the union of each combination of pairs of unions
+    ur12 = np.union1d(ur1, ur2)
+    ur23 = np.union1d(ur2, ur3)
+    ur31 = np.union1d(ur3, ur1)
 
+    #if at least one of the column-intersections is not an empty set
     if (ic1.size > 0) | (ic1.size > 0) | (ic3.size > 0):
+        #if the first column has unique elements
         if np.intersect1d(ic1, uc23).size == 0 and ic1.size > 0:
-            #print('deleted from col')
             subcol=0
             col_unique=ic1
+        #if the second column has unique elements
         if np.intersect1d(ic2, uc31).size == 0 and ic2.size > 0:
-            #print('deleted from col')
             subcol=1
             col_unique=ic2
+        #if the third column has unique elements
         if np.intersect1d(ic3, uc12).size == 0 and ic3.size > 0:
-            #print('deleted from col')
             subcol=2
             col_unique=ic3
         try:
+            #if one of the ifes above was triggered
             col_unique
+            #go trough the column and remove the candids from other rows
             for i in range(9):
-                if i<3*r or i>3*r+2:
+                if i<3*r or i>3*r+2:#leave out the rows in which the pointing pairs were detected
                     puzzle[i][3*c+subcol].remove(col_unique)
             del col_unique
-        except NameError:
+        except NameError:#if none of the ifs above were triggered, continue
             pass
 
+    #if at least one of the row-intersections is not an empty set
     if (ir1.size > 0) | (ir2.size > 0) | (ir3.size > 0):
+        #if the first row has unique elements
         if np.intersect1d(ir1, ur23).size == 0 and ir1.size > 0:
             subrow=0
             row_unique=ir1
+        #if the second row has unique elements
         if np.intersect1d(ir2, ur31).size == 0 and ir2.size > 0:
             subrow=1
             row_unique=ir2
+        #if the third row has unique elements
         if np.intersect1d(ir3, ur12).size == 0 and ir3.size > 0:
             subrow=2
             row_unique=ir3
         try:
+            # if one of the ifes above was triggered
             row_unique
+            # go trough the row and remove the candids from other columns
             for i in range(9):
-                if i<3*c or i>3*c+2:
+                if i<3*c or i>3*c+2:#leave out the columns in which the pointing pairs were detected
                     puzzle[r+subrow][i].remove(row_unique)
             del row_unique
-        except NameError:
+        except NameError:#if none of the ifs above were triggered, continue
             pass
 
 def box_line_reduction(puzzle, position, row_or_col):
+    #rows
     if row_or_col == 'r':
-        first=np.union1d(np.union1d(puzzle[position][0].Candids, puzzle[position][1].Candids,True), puzzle[position][2].Candids,True)
-        second=np.union1d(np.union1d(puzzle[position][3].Candids, puzzle[position][4].Candids,True), puzzle[position][5].Candids,True)
-        third=np.union1d(np.union1d(puzzle[position][6].Candids, puzzle[position][7].Candids,True), puzzle[position][8].Candids,True)
+        #get the union of candidates for all 3 groups in the intersection with the given row
+        first=np.union1d(np.union1d(puzzle[position][0].Candids, puzzle[position][1].Candids), puzzle[position][2].Candids)
+        second=np.union1d(np.union1d(puzzle[position][3].Candids, puzzle[position][4].Candids), puzzle[position][5].Candids)
+        third=np.union1d(np.union1d(puzzle[position][6].Candids, puzzle[position][7].Candids), puzzle[position][8].Candids)
+        #get the index of the group (0,1,2) trough which the given row passes trough
         sq_row = position // 3
-
+    #columns
     if row_or_col == 'c':
-        first=np.union1d(np.union1d(puzzle[0][position].Candids, puzzle[1][position].Candids,True), puzzle[2][position].Candids,True)
-        second=np.union1d(np.union1d(puzzle[3][position].Candids, puzzle[4][position].Candids,True), puzzle[5][position].Candids,True)
-        third=np.union1d(np.union1d(puzzle[6][position].Candids, puzzle[7][position].Candids,True), puzzle[8][position].Candids,True)
+        # get the union of candidates for all 3 groups in the intersection with the given column
+        first=np.union1d(np.union1d(puzzle[0][position].Candids, puzzle[1][position].Candids), puzzle[2][position].Candids)
+        second=np.union1d(np.union1d(puzzle[3][position].Candids, puzzle[4][position].Candids), puzzle[5][position].Candids)
+        third=np.union1d(np.union1d(puzzle[6][position].Candids, puzzle[7][position].Candids), puzzle[8][position].Candids)
+        # get the index of the group (0,1,2) trough which the given column passes trough
         sq_col = position // 3
 
-    u23 = np.union1d(second, third,True)
-    u31 = np.union1d(first, third,True)
-    u12 = np.union1d(first, second,True)
+    #Get the unions of candidates of each combination of the 3 groups
+    u23 = np.union1d(second, third)
+    u31 = np.union1d(first, third)
+    u12 = np.union1d(first, second)
+    #Get the candidates which are exclusive for the given group
     first_exclusive = np.setdiff1d(first, u23, True)
     second_exclusive = np.setdiff1d(second, u31, True)
     third_exclusive = np.setdiff1d(third, u12, True)
+
+    #if the first group has unique candidates
     if (first_exclusive.size > 0):
+        #iterate trough that group
         for i in range(3):
             for j in range(3):
+                #if row
                 if row_or_col == 'r':
-                    if position!=3*sq_row+i:
-                        puzzle[3*sq_row+i,j].remove(first_exclusive)
-                        if puzzle[3*sq_row+i,j].Candids.size==0:
-                            print([3*sq_row+i,j],end=' ')
-                            print('vynulovano first R')
+                    if position!=3*sq_row+i:#if the position is not in first row of the group
+                        puzzle[3*sq_row+i,j].remove(first_exclusive)#remove the candidates
+                        # if puzzle[3*sq_row+i,j].Candids.size==0:
+                        #     print([3*sq_row+i,j],end=' ')
+                        #     print('vynulovano first R')
+                #if column
                 if row_or_col == 'c':
-                    if position!=3*sq_col+j:
-                        puzzle[i,3*sq_col+j].remove(first_exclusive)
-                        if puzzle[i,3*sq_col+j].Candids.size==0:
-                            print([i,3*sq_col+j],end=' ')
-                            print('vynulovano first C')
+                    if position!=3*sq_col+j:#if the position is not in first column of the group
+                        puzzle[i,3*sq_col+j].remove(first_exclusive)#remove the candidates
+                        # if puzzle[i,3*sq_col+j].Candids.size==0:
+                        #     print([i,3*sq_col+j],end=' ')
+                        #     print('vynulovano first C')
     if (second_exclusive.size > 0):
         for i in range(3):
             for j in range(3):
                 if row_or_col == 'r':
-                    if position != 3*sq_row+i:
-                        puzzle[3 * sq_row + i,3+j].remove(second_exclusive)
-                        if puzzle[3 * sq_row + i,3+j].Candids.size==0:
-                            print([3 * sq_row + i,3+j],end=' ')
-                            print('vynulovano second R')
+                    if position != 3*sq_row+i:#if the position is not in second row of the group
+                        puzzle[3 * sq_row + i,3+j].remove(second_exclusive)#remove the candidates
+                        # if puzzle[3 * sq_row + i,3+j].Candids.size==0:
+                        #     print([3 * sq_row + i,3+j],end=' ')
+                        #     print('vynulovano second R')
                 if row_or_col == 'c':
-                    if position != 3*sq_col+j:
-                        puzzle[3+i,3 * sq_col + j].remove(second_exclusive)
-                        if puzzle[3+i,3 * sq_col + j].Candids.size==0:
-                            print([3+i,3 * sq_col + j],end=' ')
-                            print('vynulovano second C')
+                    if position != 3*sq_col+j:#if the position is not in second column of the group
+                        puzzle[3+i,3 * sq_col + j].remove(second_exclusive)#remove the candidates
+                        # if puzzle[3+i,3 * sq_col + j].Candids.size==0:
+                        #     print([3+i,3 * sq_col + j],end=' ')
+                        #     print('vynulovano second C')
     if (third_exclusive.size > 0):
         for i in range(3):
             for j in range(3):
                 if row_or_col == 'r':
-                    if position != 3*sq_row+i:
-                        puzzle[3 * sq_row + i,6+j].remove(third_exclusive)
-                        if puzzle[3 * sq_row + i,6+j].Candids.size==0:
-                            print([3 * sq_row + i,6+j],end=' ')
-                            print('vynulovano third R')
+                    if position != 3*sq_row+i:#if the position is not in third row of the group
+                        puzzle[3 * sq_row + i,6+j].remove(third_exclusive)#remove the candidates
+                        # if puzzle[3 * sq_row + i,6+j].Candids.size==0:
+                        #     print([3 * sq_row + i,6+j],end=' ')
+                        #     print('vynulovano third R')
                 if row_or_col == 'c':
-                    if position != 3*sq_col+j:
-                        puzzle[6+i,3 * sq_col + j].remove(third_exclusive)
-                        if puzzle[6+i,3 * sq_col + j].Candids.size==0:
-                            print([6+i,3 * sq_col + j],end=' ')
-                            print('vynulovano third C')
-
-
+                    if position != 3*sq_col+j:#if the position is not in third column of the group
+                        puzzle[6+i,3 * sq_col + j].remove(third_exclusive)#remove the candidates
+                        # if puzzle[6+i,3 * sq_col + j].Candids.size==0:
+                        #     print([6+i,3 * sq_col + j],end=' ')
+                        #     print('vynulovano third C')
 
 
 
@@ -341,7 +365,7 @@ for i in range(9):
 
 
 counter = 1
-while not puzzle_is_solved(puzzle) and counter < 2:
+while not puzzle_is_solved(puzzle) and counter < 20:
 
     # Purging candidates
     purge_candids(puzzle)
@@ -359,33 +383,19 @@ while not puzzle_is_solved(puzzle) and counter < 2:
 
 
     # Filling hidden singles
-    for r in range(9):
-        for c in range(9):
-            # print(str(r) + 'x' + str(c) + '\n')
-            hidden_single(puzzle, (r, c), 'r')
-            hidden_single(puzzle, (r, c), 'c')
-            hidden_single(puzzle, (r, c), 's')
+    # for r in range(9):
+    #     for c in range(9):
+    #         # print(str(r) + 'x' + str(c) + '\n')
+    #         hidden_single(puzzle, (r, c), 'r')
+    #         hidden_single(puzzle, (r, c), 'c')
+    #         hidden_single(puzzle, (r, c), 's')
 
 
     # Naked pairs
-    for i in range(9):
-        for j in range(9):
-            naked_pair(puzzle, (i, j))
+    # for i in range(9):
+    #     for j in range(9):
+    #         naked_pair(puzzle, (i, j))
 
-    print('CANDIDS\n')
-    for i in range(9):
-        for j in range(9):
-            c = len(puzzle[i][j].Candids)
-            if c:
-                for k in range(9):
-                    if c - k > 0:
-                        print(puzzle[i][j].Candids[k], end='')
-                    else:
-                        print('_', end='')
-                print('\t', end='')
-            else:
-                print(str(puzzle[i][j].Value) + '!______\t', end='')
-        print('\n')
 
 
     # Pointing pairs
@@ -393,9 +403,25 @@ while not puzzle_is_solved(puzzle) and counter < 2:
         for j in range(3):
             pointing_pairs(puzzle, [i,j])
 
+    #Box_line_reduction
+    # for i in range(9):
+    #         box_line_reduction(puzzle,i,'r')
+    #         box_line_reduction(puzzle,i,'c')
+
+    print('CANDIDS\n')
     for i in range(9):
-            box_line_reduction(puzzle,i,'r')
-            box_line_reduction(puzzle,i,'c')
+        for j in range(9):
+            if len(puzzle[i][j].Candids) > 1:
+                for k in range(9):
+                    if len(puzzle[i][j].Candids) - k > 0:
+                        print(puzzle[i][j].Candids[k], end='')
+                    else:
+                        print('_', end='')
+                print('\t', end='')
+            else:
+                print(str(puzzle[i][j].Candids[0]) + '!______\t', end='')
+        print('\n')
+
 
     if puzzle_is_solved(puzzle):
         print(counter)
@@ -411,8 +437,8 @@ print('\n')
 vystup = np.ndarray((9, 9), dtype=np.dtype('uint8'))
 for i in range(9):
     for j in range(9):
-        if puzzle[i][j].Value is not None:
-            vystup[i][j] = puzzle[i][j].Value
+        if len(puzzle[i][j].Candids)==1:
+            vystup[i][j] = puzzle[i][j].Candids[0]
         else:
             vystup[i][j] = 0
 
@@ -428,14 +454,15 @@ print('\n')
 print('CANDIDS\n')
 for i in range(9):
     for j in range(9):
-        c=len(puzzle[i][j].Candids)
-        if c:
+        if len(puzzle[i][j].Candids) >1:
             for k in range(9):
-                if c-k > 0:
+                if len(puzzle[i][j].Candids)-k > 0:
                     print(puzzle[i][j].Candids[k], end='')
                 else:
                     print('_', end='')
             print('\t', end='')
         else:
-            print(str(puzzle[i][j].Value)+'!______\t', end='')
+            print(str(puzzle[i][j].Candids[0])+'!______\t', end='')
     print('\n')
+
+print('Puzzle solved successfully' if (reseni-vystup==0).all() else 'Puzzle has not been solved')

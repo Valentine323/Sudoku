@@ -19,7 +19,8 @@ grid = np.zeros(closed.shape, dtype=np.uint8)
 grid[stats[1] == indx[1]] = 255
 
 (contours, _) = cv2.findContours(grid, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
+help_list = []
+max_countour=[]
 for contour in contours:
     # Vypočtení obvodu uzavřených kontur, vrací obvod kontury
     perimeter = cv2.arcLength(contour,True)
@@ -33,8 +34,16 @@ for contour in contours:
             # Pokud je obsah plochy kontury větší, než 15% plochy obrázku
             if area > 0.15*(np.size(grid, 0)*np.size(grid, 1)):
                 help_list.append(area)
+                max_countour=contour_approx
+
+
+
+# Draw all contours
+vis = np.zeros((height, width, 3), np.uint8)
+cv2.drawContours(vis, contours, -1, (128,255,255), thickness=cv2.FILLED)
 
 cv2.waitKey()
 # plt.imshow(grid,'gray')
-# plt.show()
+plt.imshow(vis,'gray')
+plt.show()
 

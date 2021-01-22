@@ -201,10 +201,10 @@ def naked_pair(puzzle, coordinates):#algoritm for naked pairs (see: https://www.
                             puzzle[3 * square_r + i][3 * square_c + j].remove(puzzle[r][c].Candids)#remove candidates
         except NameError:
             pass
-    else:  # if the cell is trivial, set its value  ----- IF AN ERROR OCCURES IN THE FUTURE - CHECK THIS
-        # print('row:{} col:{}'.format(r,c))
-        if np.isnan(puzzle[r][c].Value):
-            puzzle[r][c].set(puzzle[r][c].Candids[0])
+    # else:  # if the cell is trivial, set its value  ----- IF AN ERROR OCCURES IN THE FUTURE - CHECK THIS
+    #     # print('row:{} col:{}'.format(r,c))
+    #     if np.isnan(puzzle[r][c].Value):
+    #         puzzle[r][c].set(puzzle[r][c].Candids[0])
 
 def pointing_pairs(puzzle, scoordinates):
     r, c = scoordinates
@@ -355,8 +355,8 @@ def box_line_reduction(puzzle, position, row_or_col):
 ####################################################################################################
 ## PREPARATION STEPS
 # reading in the file
-f = open('sudoku3.txt', 'r')
-s = open('solution3.txt','r')
+f = open('sudoku2.txt', 'r')
+s = open('solution2.txt','r')
 # removing separators
 sequence_in = f.read().replace('\n', '').replace(' ', '').replace(',', '').replace(';', '')
 f.close()
@@ -401,19 +401,18 @@ while not puzzle_is_solved(puzzle) and counter < 20:
 
 
     # Filling hidden singles
-    # puzzle_cpy = np.copy(puzzle)
-    # for r in range(9):
-    #     for c in range(9):
-    #         # print(str(r) + 'x' + str(c) + '\n')
-    #         hidden_single(puzzle, (r, c), 'r')
-    #         hidden_single(puzzle, (r, c), 'c')
-    #         hidden_single(puzzle, (r, c), 's')
+    for r in range(9):
+        for c in range(9):
+            # print(str(r) + 'x' + str(c) + '\n')
+            hidden_single(puzzle, (r, c), 'r')
+            hidden_single(puzzle, (r, c), 'c')
+            hidden_single(puzzle, (r, c), 's')
 
 
     # Naked pairs
-    # for i in range(9):
-    #     for j in range(9):
-    #         naked_pair(puzzle, (i, j))
+    for i in range(9):
+        for j in range(9):
+            naked_pair(puzzle, (i, j))
 
     print('CANDIDS\n')
     for i in range(9):
@@ -432,13 +431,13 @@ while not puzzle_is_solved(puzzle) and counter < 20:
 
 
     # Pointing pairs
-    # for i in range(3):
-    #     for j in range(3):
-    #         pointing_pairs(puzzle, [i,j])
+    for i in range(3):
+        for j in range(3):
+            pointing_pairs(puzzle, [i,j])
 
-    for i in range(9):
-            box_line_reduction(puzzle,i,'r')
-            box_line_reduction(puzzle,i,'c')
+    # for i in range(9):
+    #         box_line_reduction(puzzle,i,'r')
+    #         box_line_reduction(puzzle,i,'c')
 
     if puzzle_is_solved(puzzle):
         print(counter)
@@ -468,17 +467,16 @@ print(reseni)
 print('\n')
 
 #PRINTING ALL CANDIDS TO SEE BETTER
-print('CANDIDS\n')
-for i in range(9):
-    for j in range(9):
-        c=len(puzzle[i][j].Candids)
-        if c:
-            for k in range(9):
-                if c-k > 0:
-                    print(puzzle[i][j].Candids[k], end='')
-                else:
-                    print('_', end='')
-            print('\t', end='')
-        else:
-            print(str(puzzle[i][j].Value)+'!______\t', end='')
-    print('\n')
+# print('CANDIDS\n')
+# for i in range(9):
+#     for j in range(9):
+#         if len(puzzle[i][j].Candids)>1:
+#             for k in range(9):
+#                 if len(puzzle[i][j].Candids)-k > 0:
+#                     print(puzzle[i][j].Candids[k], end='')
+#                 else:
+#                     print('_', end='')
+#             print('\t', end='')
+#         else:
+#             print(str(puzzle[i][j].Candids[0])+'!______\t', end='')
+#     print('\n')
