@@ -9,7 +9,8 @@
 
 ## INCLUDES
 import numpy as np
-
+import os
+import re
 ## CLASSES AND FUNCTIONS
 
 class pole:#class in which all the data about the sudoku cell is stored - values, candidates
@@ -25,10 +26,12 @@ class pole:#class in which all the data about the sudoku cell is stored - values
     def is_trivial(self):#if the cell has only one candidate returns true
         return True if len(self.Candids) == 1 else False
 
-    def remove(self, candid):#removes desired candidates
-        if isinstance(candid, np.ndarray) and (len(self.Candids)-len(candid))>0:
-            for i in range(len(candid)):
-                self.Candids = np.delete(self.Candids, self.Candids == candid[i])
+    def remove(self, candids):#removes desired candidates
+        #Bug: ig the length of the candids (to be removed) is the same as the length of the candids the cell has, but the individual numbers differ, nothing will be removed (even if at least some of them could be removed)
+        #diff=np.setdiff1d(candids,self.Candids)
+        if (len(self.Candids)-len(candids))>0:#isinstance(candids, np.ndarray) unnecessary condition - always met
+            for candid in candids:
+                self.Candids = np.delete(self.Candids, self.Candids == candid)
 
     def remove_exc(self, candid):#removes all candids except the one(s) given to the method (often needed)
         if isinstance(candid, np.ndarray):
@@ -170,7 +173,7 @@ def naked_pair(puzzle, coordinates):#algoritm for naked pairs (see: https://www.
     #     if np.isnan(puzzle[r][c].Value):
     #         puzzle[r][c].set(puzzle[r][c].Candids[0])
 
-def pointing_pairs(puzzle, scoordinates):
+def pointing_pairs(puzzle, scoordinates):#algoritm for pointing pairs (see: https://www.algoritmy.net/article/1351/Sudoku)
     r, c = scoordinates #getting the position of the group (larger squares)
     #cols
     #getting the intersection of candids in each column
@@ -250,7 +253,7 @@ def pointing_pairs(puzzle, scoordinates):
         except NameError:#if none of the ifs above were triggered, continue
             pass
 
-def box_line_reduction(puzzle, position, row_or_col):
+def box_line_reduction(puzzle, position, row_or_col):#algoritm for box/line reduction (see: https://www.algoritmy.net/article/1351/Sudoku)
     #rows
     if row_or_col == 'r':
         #get the union of candidates for all 3 groups in the intersection with the given row
@@ -328,7 +331,53 @@ def box_line_reduction(puzzle, position, row_or_col):
                         #     print('vynulovano third C')
 
 
+def print_candids(puzzle):
+    print('CANDIDS\n')
+    for i in range(9):
+        for j in range(9):
+            if len(puzzle[i][j].Candids) > 1:
+                for k in range(9):
+                    if len(puzzle[i][j].Candids) - k > 0:
+                        print(puzzle[i][j].Candids[k], end='')
+                    else:
+                        print('_', end='')
+                print('\t', end='')
+            else:
+                print(str(puzzle[i][j].Candids[0]) + '!______\t', end='')
+        print('\n')
 
+def read_solution_txt(path_to_file):
+    try:
+        f = open(path_to_file,'r')
+        sequence=''
+        lines = f.readlines()
+        for k in range(len(lines) - 2):
+            line = lines[k]
+            digits = re.findall('\d', line)
+            if len(digits) > 1:
+                row = ''
+                i = 0
+                while i < 9:
+                    row += str(digits[i])
+                    i += 1
+                sequence += str(row)
+        pos = sequence.find('0')
+        f.close()
+        if pos > 0: sequence_in = sequence[:pos]
+        return sequence
+    except IOError:
+        print('Error: File does not appear to exist.')
+        return -1
+
+def read_puzzle_txt(path_to_file):
+    try:
+        f = open(path_to_file,'r')
+        sequence = f.read().replace('\n', '').replace(' ', '').replace(',', '').replace(';', '')
+        f.close()
+        return sequence
+    except IOError:
+        print('Error: File does not appear to exist.')
+        return -1
 
 ####################################################################################################
 ####################################################################################################
@@ -336,23 +385,29 @@ def box_line_reduction(puzzle, position, row_or_col):
 ####################################################################################################
 ####################################################################################################
 ## PREPARATION STEPS
-# reading in the file
-f = open('sudoku2.txt', 'r')
-s = open('solution2.txt','r')
-# removing separators
-sequence_in = f.read().replace('\n', '').replace(' ', '').replace(',', '').replace(';', '')
-f.close()
-sequence_sol = s.read().replace('\n', '').replace(' ', '').replace(',', '').replace(';', '')
-s.close()
+#Searching for sudoku files and preprocessing them
+puzzles=os.listdir(os.getcwd()+'/Puzzles')#path to the folder where the puzzles are stored
+solutions=os.listdir(os.getcwd()+'/Solutions')#path to the folder where the solutions are stored
+p_path = lambda p: os.getcwd()+'/Puzzles'+'/'+p#lambda function for getting the absolute path for all puzzle file
+s_path = lambda s: os.getcwd()+'/Solutions'+'/'+s#lambda function for getting the absolute path for all solution file
+#paths stores the absolute paths to the puzzles and their solutions in an Nx2 matrix
+paths=np.array([[p_path(p) for p in puzzles],[s_path(s) for s in solutions]]).transpose()
+#here should be a for cycle, but not yet
+
+sequence_in=read_puzzle_txt(paths[1,0])
+sequence_sol=read_solution_txt(paths[1,1])
+
 length = len(sequence_in)
 
 # check number of elements
 if length != 81 & length != sequence_in.isdigit():
     print('Input is not in the right format or length')
+if length != 81 & length != sequence_sol.isdigit():
+    print('Output is not in the right format or length')
 vstup = np.array([s for s in sequence_in], dtype=np.uint8)
 reseni = np.array([s for s in sequence_sol], dtype=np.uint8)
-np.ndarray.resize(vstup, (9, 9))
-np.ndarray.resize(reseni, (9, 9))
+vstup=np.resize(vstup, (9, 9))
+reseni=np.resize(reseni, (9, 9))
 
 # create an array of classes
 puzzle = np.ndarray((9, 9), dtype=np.dtype(pole))
@@ -365,7 +420,7 @@ for i in range(9):
 
 
 counter = 1
-while not puzzle_is_solved(puzzle) and counter < 20:
+while not puzzle_is_solved(puzzle) and counter < 200:
 
     # Purging candidates
     purge_candids(puzzle)
@@ -383,19 +438,17 @@ while not puzzle_is_solved(puzzle) and counter < 20:
 
 
     # Filling hidden singles
-    # for r in range(9):
-    #     for c in range(9):
-    #         # print(str(r) + 'x' + str(c) + '\n')
-    #         hidden_single(puzzle, (r, c), 'r')
-    #         hidden_single(puzzle, (r, c), 'c')
-    #         hidden_single(puzzle, (r, c), 's')
+    for r in range(9):
+        for c in range(9):
+            hidden_single(puzzle, (r, c), 'r')
+            hidden_single(puzzle, (r, c), 'c')
+            hidden_single(puzzle, (r, c), 's')
 
 
     # Naked pairs
-    # for i in range(9):
-    #     for j in range(9):
-    #         naked_pair(puzzle, (i, j))
-
+    for i in range(9):
+        for j in range(9):
+            naked_pair(puzzle, (i, j))
 
 
     # Pointing pairs
@@ -403,28 +456,16 @@ while not puzzle_is_solved(puzzle) and counter < 20:
         for j in range(3):
             pointing_pairs(puzzle, [i,j])
 
+
     #Box_line_reduction
-    # for i in range(9):
-    #         box_line_reduction(puzzle,i,'r')
-    #         box_line_reduction(puzzle,i,'c')
-
-    print('CANDIDS\n')
     for i in range(9):
-        for j in range(9):
-            if len(puzzle[i][j].Candids) > 1:
-                for k in range(9):
-                    if len(puzzle[i][j].Candids) - k > 0:
-                        print(puzzle[i][j].Candids[k], end='')
-                    else:
-                        print('_', end='')
-                print('\t', end='')
-            else:
-                print(str(puzzle[i][j].Candids[0]) + '!______\t', end='')
-        print('\n')
+            box_line_reduction(puzzle,i,'r')
+            box_line_reduction(puzzle,i,'c')
 
+    # PRINTING ALL CANDIDS TO SEE BETTER
+    print_candids(puzzle)
 
     if puzzle_is_solved(puzzle):
-        print(counter)
         break
     counter += 1
 
@@ -451,18 +492,5 @@ print(reseni)
 print('\n')
 
 #PRINTING ALL CANDIDS TO SEE BETTER
-print('CANDIDS\n')
-for i in range(9):
-    for j in range(9):
-        if len(puzzle[i][j].Candids) >1:
-            for k in range(9):
-                if len(puzzle[i][j].Candids)-k > 0:
-                    print(puzzle[i][j].Candids[k], end='')
-                else:
-                    print('_', end='')
-            print('\t', end='')
-        else:
-            print(str(puzzle[i][j].Candids[0])+'!______\t', end='')
-    print('\n')
-
-print('Puzzle solved successfully' if (reseni-vystup==0).all() else 'Puzzle has not been solved')
+print_candids(puzzle)
+print('Puzzle solved successfully in {} iterations'.format(counter) if (reseni-vystup==0).all() else 'Puzzle has not been solved')
