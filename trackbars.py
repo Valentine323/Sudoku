@@ -54,3 +54,30 @@ def trackbar(img,tb,operation):
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 cv2.destroyWindow(operation)
                 break
+
+
+    #canny edge detector with 2 trackbars
+    if operation == 'tresh':
+        positions[0]=3
+        positions[1]=3
+        while True:
+            cv2.imshow(operation, cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, positions[0], positions[1]))
+            for i in range(tb.shape[0]):
+                positions[i] = cv2.getTrackbarPos(tb[i][0], operation)
+                if not positions[0] & 0x1: positions[0]+=1
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                cv2.destroyWindow(operation)
+                break
+
+    #gaussBlurr
+    if operation == 'gaussBlurr':
+        positions[0]=3
+        positions[1]=3
+        while True:
+            cv2.imshow(operation, cv2.GaussianBlur(img, (positions[0], positions[0]), positions[1]))
+            for i in range(tb.shape[0]):
+                positions[i] = cv2.getTrackbarPos(tb[i][0], operation)
+                if not positions[0] & 0x1: positions[0]+=1
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                cv2.destroyWindow(operation)
+                break
