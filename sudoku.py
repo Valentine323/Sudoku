@@ -27,16 +27,17 @@ class pole:#class in which all the data about the sudoku cell is stored - values
         return True if len(self.Candids) == 1 else False
 
     def remove(self, candids):#removes desired candidates
-        #Bug: ig the length of the candids (to be removed) is the same as the length of the candids the cell has, but the individual numbers differ, nothing will be removed (even if at least some of them could be removed)
-        #diff=np.setdiff1d(candids,self.Candids)
-        if (len(self.Candids)-len(candids))>0:#isinstance(candids, np.ndarray) unnecessary condition - always met
+        #get the unique candidates of the cell
+        diff=np.setdiff1d(self.Candids,candids)
+        if len(diff)>0:#if the cell has at least one unique candidate (not to be removed), remove the desired candidates
             for candid in candids:
                 self.Candids = np.delete(self.Candids, self.Candids == candid)
 
-    def remove_exc(self, candid):#removes all candids except the one(s) given to the method (often needed)
-        if isinstance(candid, np.ndarray):
-            for i in range(len(candid)):
-                self.Candids = np.delete(self.Candids, self.Candids != candid[i])
+    def remove_exc(self, candids):#removes all candids except the one(s) given to the method (often needed)
+        #get the unique candidates of the cell
+        if len(candids)>0:
+            for candid in candids:
+                self.Candids = np.delete(self.Candids, self.Candids != candid)
 
 def puzzle_is_solved(puzzle):#checks whether the puzzle is solved
     for r in range(9):
@@ -172,6 +173,31 @@ def naked_pair(puzzle, coordinates):#algoritm for naked pairs (see: https://www.
     # else:  # if the cell is trivial, set its value  ----- IF AN ERROR OCCURES IN THE FUTURE - CHECK THIS
     #     if np.isnan(puzzle[r][c].Value):
     #         puzzle[r][c].set(puzzle[r][c].Candids[0])
+
+def hidden_pair(puzzle, coordinates):#algoritm for naked pairs (see: https://www.algoritmy.net/article/1351/Sudoku)
+    r, c= coordinates#parse coordinates of the given position
+    if len(puzzle[r][c].Candids)>1:
+        # determine in which group the given cell is in
+        square_r = coordinates[0] // 3
+        square_c = coordinates[1] // 3
+        for i in range(3):
+            for j in range(3):
+                if(np.all([i,j]!=[r,c])):
+                    intersect = np.intersect1d(puzzle[r][c].Candids, puzzle[3 * square_r + i][3 * square_c + j].Candids)#get the intersection of the candids
+                    try:
+                        numbers
+                        if len(intersect)==len(numbers) and len(intersect)>0:
+                            if np.all(intersect==numbers):
+                                coords = np.vstack((coords, [3 * square_r + i, 3 * square_c + j]))
+                    except NameError:
+                        coords = np.empty((0, 2), dtype=np.uint8)
+                        numbers = intersect
+        try:
+            coords
+            if coords.shape[0] == (len(numbers)):
+                puzzle[r][c].remove_exc(numbers)
+        except NameError:
+            pass
 
 def pointing_pairs(puzzle, scoordinates):#algoritm for pointing pairs (see: https://www.algoritmy.net/article/1351/Sudoku)
     r, c = scoordinates #getting the position of the group (larger squares)
@@ -410,7 +436,6 @@ def box_line_reduction(puzzle, position, row_or_col):#algoritm for box/line redu
                         #     print([6+i,3 * sq_col + j],end=' ')
                         #     print('vynulovano third C')
 
-
 def print_candids(puzzle):
     print('CANDIDS\n')
     for i in range(9):
@@ -474,8 +499,8 @@ s_path = lambda s: os.getcwd()+'/Solutions'+'/'+s#lambda function for getting th
 paths=np.array([[p_path(p) for p in puzzles],[s_path(s) for s in solutions]]).transpose()
 #here should be a for cycle, but not yet
 
-sequence_in=read_puzzle_txt(paths[1,0])
-sequence_sol=read_solution_txt(paths[1,1])
+sequence_in=read_puzzle_txt(paths[0,0])
+sequence_sol=read_solution_txt(paths[0,1])
 
 length = len(sequence_in)
 
@@ -500,11 +525,14 @@ for i in range(9):
 
 
 counter = 1
-while not puzzle_is_solved(puzzle) and counter < 200:
+while not puzzle_is_solved(puzzle) and counter < 20:
 
     # Purging candidates
     purge_candids(puzzle)
 
+    for i in range(9):
+        for j in range(9):
+            hidden_pair(puzzle, (i,j))
     # Filling singles
     #theoretically it could go in the for cycles above with an elif
     # for r in range(9):
@@ -518,29 +546,29 @@ while not puzzle_is_solved(puzzle) and counter < 200:
 
 
     # Filling hidden singles
-    for r in range(9):
-        for c in range(9):
-            hidden_single(puzzle, (r, c), 'r')
-            hidden_single(puzzle, (r, c), 'c')
-            hidden_single(puzzle, (r, c), 's')
+    # for r in range(9):
+    #     for c in range(9):
+    #         hidden_single(puzzle, (r, c), 'r')
+    #         hidden_single(puzzle, (r, c), 'c')
+    #         hidden_single(puzzle, (r, c), 's')
 
 
     # Naked pairs
-    for i in range(9):
-        for j in range(9):
-            naked_pair(puzzle, (i, j))
+    # for i in range(9):
+    #     for j in range(9):
+    #         naked_pair(puzzle, (i, j))
 
 
     # Pointing pairs
-    for i in range(3):
-        for j in range(3):
-            pointing_pairs(puzzle, [i,j])
+    # for i in range(3):
+    #     for j in range(3):
+    #         pointing_pairs(puzzle, [i,j])
 
 
     #Box_line_reduction
-    for i in range(9):
-            box_line_reduction(puzzle,i,'r')
-            box_line_reduction(puzzle,i,'c')
+    # for i in range(9):
+    #         box_line_reduction(puzzle,i,'r')
+    #         box_line_reduction(puzzle,i,'c')
 
     # PRINTING ALL CANDIDS TO SEE BETTER
     print_candids(puzzle)

@@ -16,7 +16,7 @@ resize_coeff_vec=np.array([resize_coeff_w,resize_coeff_h])
 
 # for path in paths:
 #reading image
-img = cv2.imread(paths[1], 0)
+img = cv2.imread(paths[0], 0)
 #getting the shape of the image
 (height, width)=img.shape
 #blurring the image with a 11x11 kernel gaussian filter with mean=1sigma
@@ -91,6 +91,7 @@ grid_rgb=np.zeros((grid.shape[0],grid.shape[1],3),dtype=np.uint8)
 grid_rgb[:,:,1]=grid
 cv2.rectangle(grid_rgb,(c2,r2),(c2+w2,r2+h2),(0,0,255),2)
 subplt[1].imshow(grid_rgb)
+plt.show()
 
 #drawing the BBs to binary images to easier calculate the IoU
 bb_cc=np.zeros(grid.shape,dtype=np.bool)
@@ -122,17 +123,20 @@ else:
 puzzle_bb=np.zeros(4)
 #deciding which BB is better - works quite well
 if IoU>0.8:#if the overlap is larger than 80%, get the larger
-    puzzle_bb[:2]=larger_bb[:2]/resize_coeff_vec
-    puzzle_bb[2:]=larger_bb[2:]/resize_coeff_vec
+    puzzle_bb[:2]=larger_bb[:2]#/resize_coeff_vec
+    puzzle_bb[2:]=larger_bb[2:]#/resize_coeff_vec
     puzzle_bb_small=larger_bb
+    print('Larger 1')
 elif larger_bb[2]*larger_bb[3]-smaller_bb[2]*smaller_bb[3]>0.5*larger_bb[2]*larger_bb[3]:#if the smaller is a lot smaller, than get the larger
-    puzzle_bb[:2]=larger_bb[:2]/resize_coeff_vec
-    puzzle_bb[2:]=larger_bb[2:]/resize_coeff_vec
+    puzzle_bb[:2]=larger_bb[:2]#/resize_coeff_vec
+    puzzle_bb[2:]=larger_bb[2:]#/resize_coeff_vec
     puzzle_bb_small = larger_bb
-elif puzzle_bb[0]+larger_bb[2]==tresh.shape[1] or larger_bb[1]+larger_bb[3]==tresh.shape[0]:#if the larger would be too large (touches the edge of the image), get the smaller
-    puzzle_bb[:2]=smaller_bb[:2]/resize_coeff_vec
-    puzzle_bb[2:]=smaller_bb[2:]/resize_coeff_vec
+    print('Larger 2')
+elif puzzle_bb[0]+larger_bb[2]==tresh.shape[1] or larger_bb[1]+larger_bb[3]==tresh.shape[0] or puzzle_bb[0]==0 or puzzle_bb[1]:#if the larger would be too large (touches the edge of the image), get the smaller
+    puzzle_bb[:2]=smaller_bb[:2]#/resize_coeff_vec
+    puzzle_bb[2:]=smaller_bb[2:]#/resize_coeff_vec
     puzzle_bb_small = smaller_bb
+    print('Smaller')
 else:#if none is true, just say, taht there is no puzzle in the picture
     print('NO PUZZLE FOUND')
 
@@ -143,28 +147,45 @@ puzzle_cut=img[pr:pr+ph,pc:pc+pw]
 puzzle_cut_small=resized[puzzle_bb_small[1]:puzzle_bb_small[1]+puzzle_bb_small[-1],puzzle_bb_small[0]:puzzle_bb_small[0]+puzzle_bb_small[-2]]
 #display the result
 
-#AdaptiveTresh trackbar
-tb.trackbar(puzzle_cut_small,np.array([['kernel',3,17],['minus',0,20]],dtype=object),'tresh')
-#Gaussian blurr trackbar
-tb.trackbar(puzzle_cut_small,np.array([['kernel',3,17],['sigma',0,20]],dtype=object),'gaussBlurr')
 
-plt.imshow(puzzle_cut_small,cmap='Greys')
-plt.show()
+
+
+#AdaptiveTresh trackbar
+# tb.trackbar(puzzle_cut_small,np.array([['kernel',3,17],['minus',0,20]],dtype=object),'tresh')
+# #Gaussian blurr trackbar
+# tb.trackbar(puzzle_cut_small,np.array([['kernel',3,17],['sigma',0,20]],dtype=object),'gaussBlurr')
+#
+# plt.imshow(puzzle_cut_small,cmap='Greys')
+# plt.show()
 
 
 #start to unwarp the puzzle
-puzzle_blurred = cv2.GaussianBlur(puzzle_cut, (11, 11), 1)
-puzzle_bin=cv2.Canny(puzzle_blurred,50,150)
+puzzle_blurred = cv2.GaussianBlur(puzzle_cut_small, (11, 11), 1)
+# puzzle_bin=cv2.Canny(puzzle_blurred,50,150)
+puzzle_bin=cv2.adaptiveThreshold(puzzle_blurred,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,11,3)
+puzzle_stats = cv2.connectedComponentsWithStats(puzzle_bin)
 
-# puzzle_stats = cv2.connectedComponentsWithStats(puzzle_bin)
-# indx = np.argsort(puzzle_stats[2][:, -1])[::-1]
-# #sort the whole stats matrix with the pixel count
-# sorted = puzzle_stats[2][indx]
-# #create an empty image
-# puzzle_grid = np.zeros((ph,pw), dtype=np.uint8)
-# #set pixel values to white, where the largest connected component was located (1st entry is white - 0th is the background)
-# puzzle_grid[puzzle_stats[1] == indx[1]] = 255
-cv2.imshow('asd',puzzle_bin)
+indx = np.argsort(puzzle_stats[2][:, -1])[::-1]
+#sort the whole stats matrix with the pixel count
+sorted = puzzle_stats[2][indx]
+#create an empty image
+puzzle_grid = np.zeros((puzzle_bb_small[3],puzzle_bb_small[2],3), dtype=np.uint8)
+#find contours in the binary image
+contours, _= cv2.findContours(puzzle_bin, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+largest=0
+for contour in contours:
+    epsilon = 0.1 * cv2.arcLength(contour, True)
+    approx = cv2.approxPolyDP(contour, epsilon, True)
+    if len(approx) == 4:
+        area=cv2.contourArea(contour)
+        c=contour
+        print('puzzle found')
+        break
+
+#set pixel values to white, where the largest connected component was located (1st entry is white - 0th is the background)
+puzzle_grid[puzzle_stats[1] == indx[1],:] = 255
+# cv2.drawContours(puzzle_grid, c, -1, (0,255,0), 3)
+cv2.imshow('asd',puzzle_grid)
 cv2.waitKey()
 
 
