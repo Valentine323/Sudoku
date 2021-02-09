@@ -34,9 +34,10 @@ class pole:#class in which all the data about the sudoku cell is stored - values
                 self.Candids = np.delete(self.Candids, self.Candids == candid)
 
     def remove_exc(self, candids):#removes all candids except the one(s) given to the method (often needed)
-        #get the unique candidates of the cell
-        if len(candids)>0:
-            self.Candids = np.array(candids,dtype=np.uint8)
+        #delete elements only, if at least one candidate would remain
+        intersect=np.intersect1d(self.Candids,candids,True)
+        if intersect.size>0:
+            self.Candids = np.delete(self.Candids, np.invert(np.isin(self.Candids,candids)))#remove any number, which is not a candidate given by the parameter of the method
 
 def puzzle_is_solved(puzzle):#checks whether the puzzle is solved
     for r in range(9):
