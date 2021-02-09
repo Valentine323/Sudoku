@@ -36,8 +36,7 @@ class pole:#class in which all the data about the sudoku cell is stored - values
     def remove_exc(self, candids):#removes all candids except the one(s) given to the method (often needed)
         #get the unique candidates of the cell
         if len(candids)>0:
-            for candid in candids:
-                self.Candids = np.delete(self.Candids, self.Candids != candid)
+            self.Candids = np.array(candids,dtype=np.uint8)
 
 def puzzle_is_solved(puzzle):#checks whether the puzzle is solved
     for r in range(9):
@@ -194,8 +193,13 @@ def hidden_pair(puzzle, coordinates):#algoritm for naked pairs (see: https://www
                         numbers = intersect
         try:
             coords
-            if coords.shape[0] == (len(numbers)):
+            #################################################
+            if coords.shape[0] == len(numbers)-1 and coords.shape[0]>1: ## ITTTTTTT
+                ##############################################
+                for i,j in coords:
+                    puzzle[i][j].remove_exc(numbers)
                 puzzle[r][c].remove_exc(numbers)
+
         except NameError:
             pass
 
@@ -499,8 +503,10 @@ s_path = lambda s: os.getcwd()+'/Solutions'+'/'+s#lambda function for getting th
 paths=np.array([[p_path(p) for p in puzzles],[s_path(s) for s in solutions]]).transpose()
 #here should be a for cycle, but not yet
 
-sequence_in=read_puzzle_txt(paths[0,0])
-sequence_sol=read_solution_txt(paths[0,1])
+
+# for g in range(paths.size):
+sequence_in=read_puzzle_txt(paths[4,0])
+sequence_sol=read_solution_txt(paths[4,1])
 
 length = len(sequence_in)
 
@@ -533,6 +539,7 @@ while not puzzle_is_solved(puzzle) and counter < 20:
     for i in range(9):
         for j in range(9):
             hidden_pair(puzzle, (i,j))
+
     # Filling singles
     #theoretically it could go in the for cycles above with an elif
     # for r in range(9):
@@ -571,14 +578,14 @@ while not puzzle_is_solved(puzzle) and counter < 20:
     #         box_line_reduction(puzzle,i,'c')
 
     # PRINTING ALL CANDIDS TO SEE BETTER
-    print_candids(puzzle)
+    #print_candids(puzzle)
 
     if puzzle_is_solved(puzzle):
         break
     counter += 1
 
 # printing result
-# print(puzzle_is_solved(puzzle))
+# print(str(g)+' '+str(puzzle_is_solved(puzzle)))
 print('vstup\n')
 print(vstup)
 print('\n')
