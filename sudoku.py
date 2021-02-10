@@ -13,6 +13,8 @@ import os
 import re
 ## CLASSES AND FUNCTIONS
 
+#TODO: FIND THE ERROR IN hidden_pair (0,3) is wrongly set to 6 instead of 8
+
 class pole:#class in which all the data about the sudoku cell is stored - values, candidates
     def __init__(self, value):
         if value == 0:#if the input field is empty
@@ -73,6 +75,7 @@ def hidden_single(puzzle, position, dim):#algoritm for hidden single (see: https
                     # print(coords)
                     puzzle[r][c].remove(numbers)#remove the common numbers
                     puzzle[r][c].set(puzzle[r][c].Candids[0])#set the value of the cell
+                    exclude_from_rest(puzzle,puzzle[r][c].Candids[0],(r,c))
             except NameError:
                 pass#if there was no other cells suffising the conditions above, do nothing
 
@@ -94,6 +97,7 @@ def hidden_single(puzzle, position, dim):#algoritm for hidden single (see: https
                 if coords.shape[0] == (len(puzzle[r][c].Candids) - 1):
                     puzzle[r][c].remove(numbers)
                     puzzle[r][c].set(puzzle[r][c].Candids[0])
+                    exclude_from_rest(puzzle, puzzle[r][c].Candids[0], (r, c))
             except NameError:
                 pass
 
@@ -119,9 +123,11 @@ def hidden_single(puzzle, position, dim):#algoritm for hidden single (see: https
                 if coords.shape[0] == (len(puzzle[r][c].Candids) - 1):
                     puzzle[r][c].remove(numbers)
                     puzzle[r][c].set(puzzle[r][c].Candids[0])
+                    exclude_from_rest(puzzle, puzzle[r][c].Candids[0], (r, c))
             except NameError:
                 pass
-
+    else:
+        exclude_from_rest(puzzle, puzzle[r][c].Candids[0], (r, c))
 def purge_candids(puzzle):    # Purging candidates
     # remove the value of the cell from the candidates of other cells, which accoding to the sudoku's rules cant be candidate for those cells
     for r in range(9):
@@ -137,11 +143,29 @@ def purge_candids(puzzle):    # Purging candidates
                     for j in range(3):
                         puzzle[3 * squares_r + i][3 * squares_c + j].remove(puzzle[r][c].Candids)
 
+def exclude_from_rest(puzzle,candidate, position):#function, which removes the value of a cell from the candidates of other cells in the row/column/box it is in, once it is set
+    #no need to worry abbout removing all the candidates, as it is checked in the .remove method of the pole class
+    r,c=(position)#getting the position as 2 variables
+    square_r=r//3#getting the row-index of the box
+    square_c=c//3#getting the column-index of the box
+    for i in range(9):#loop trough all rows except the one which is set
+        if i!=r:
+            puzzle[i][c].remove(candidate)
+    for i in range(9):#loop trough all columns except the one which is set
+        if i!=c:
+            puzzle[r][i].remove(candidate)
+    #loop trough the box and remove the candidates from the 4 remaining cells of that box
+    for i in range(3):
+        for j in range(3):
+            if 3*square_r+i!=r or 3*square_c+j!=c:#if the position is neither the line nor the column in which the value was set
+                puzzle[3*square_r+i][3*square_c+j].remove(candidate)
+
 def set_trivials(puzzle):#the work of this function may be redundant by introducing the hidden_single function
     for r in range(9):
         for c in range(9):
             if puzzle[r][c].is_trivial():
                 puzzle[r][c].set(puzzle[r][c].Candids[0])
+                exclude_from_rest(puzzle, puzzle[r][c].Candids[0], (r, c))
 
 def naked_pair(puzzle, coordinates):#algoritm for naked pairs (see: https://www.algoritmy.net/article/1351/Sudoku)
     r, c= coordinates#parse coordinates of the given position
@@ -182,20 +206,24 @@ def hidden_pair(puzzle, coordinates):#algoritm for naked pairs (see: https://www
         square_c = coordinates[1] // 3
         for i in range(3):
             for j in range(3):
-                if(np.all([i,j]!=[r,c])):
-                    intersect = np.intersect1d(puzzle[r][c].Candids, puzzle[3 * square_r + i][3 * square_c + j].Candids)#get the intersection of the candids
-                    try:
-                        numbers
-                        if len(intersect)==len(numbers) and len(intersect)>0:
-                            if np.all(intersect==numbers):
-                                coords = np.vstack((coords, [3 * square_r + i, 3 * square_c + j]))
-                    except NameError:
-                        coords = np.empty((0, 2), dtype=np.uint8)
-                        numbers = intersect
+                intersect = np.intersect1d(puzzle[r][c].Candids, puzzle[3 * square_r + i][3 * square_c + j].Candids)#get the intersection of the candids
+                try:
+                    numbers
+                    if len(intersect)==len(numbers) and len(intersect)>0:
+                        if np.all(intersect==numbers):
+                            coords = np.vstack((coords, [3 * square_r + i, 3 * square_c + j]))
+                except NameError:
+                    coords = np.empty((0, 2), dtype=np.uint8)
+                    numbers = intersect
         try:
             coords
+            for i in range(3):
+                for j in range(3):
+                    for k in range(len(coords)):
+                        if np.isin(puzzle[i][j].Candids,coords[k]).any():
+                            np.delete(coords,k)
             #################################################
-            if coords.shape[0] == len(numbers)-1 and coords.shape[0]>1: ## ITTTTTTT
+            if coords.shape[0] == len(numbers) and coords.shape[0]>1: ## ITTTTTTT
                 ##############################################
                 for i,j in coords:
                     puzzle[i][j].remove_exc(numbers)
