@@ -32,14 +32,17 @@ class pole:#class in which all the data about the sudoku cell is stored - values
         #get the unique candidates of the cell
         diff=np.setdiff1d(self.Candids,candids)
         if len(diff)>0:#if the cell has at least one unique candidate (not to be removed), remove the desired candidates
-            for candid in candids:
-                self.Candids = np.delete(self.Candids, self.Candids == candid)
+            if isinstance(candids,np.ndarray):#if it is an array
+                for candid in candids:
+                    self.Candids = np.delete(self.Candids, self.Candids == candid)
+            else:# if it is a single value
+                self.Candids = np.delete(self.Candids, self.Candids == candids)
 
     def remove_exc(self, candids):#removes all candids except the one(s) given to the method (often needed)
         #delete elements only, if at least one candidate would remain
         intersect=np.intersect1d(self.Candids,candids,True)
-        if intersect.size>0:
-            self.Candids = np.delete(self.Candids, np.invert(np.isin(self.Candids,candids)))#remove any number, which is not a candidate given by the parameter of the method
+        if intersect.size>0:#remove any number, which is not a candidate given by the parameter of the method
+            self.Candids = np.delete(self.Candids, np.invert(np.isin(self.Candids,candids)))
 
 def puzzle_is_solved(puzzle):#checks whether the puzzle is solved
     for r in range(9):
@@ -128,6 +131,7 @@ def hidden_single(puzzle, position, dim):#algoritm for hidden single (see: https
                 pass
     else:
         exclude_from_rest(puzzle, puzzle[r][c].Candids[0], (r, c))
+
 def purge_candids(puzzle):    # Purging candidates
     # remove the value of the cell from the candidates of other cells, which accoding to the sudoku's rules cant be candidate for those cells
     for r in range(9):
@@ -228,88 +232,7 @@ def hidden_pair(puzzle, coordinates):#algoritm for naked pairs (see: https://www
                 for i,j in coords:
                     puzzle[i][j].remove_exc(numbers)
                 puzzle[r][c].remove_exc(numbers)
-
         except NameError:
-            pass
-
-def pointing_pairs(puzzle, scoordinates):#algoritm for pointing pairs (see: https://www.algoritmy.net/article/1351/Sudoku)
-    r, c = scoordinates #getting the position of the group (larger squares)
-    #cols
-    #getting the intersection of candids in each column
-    ic1 = np.intersect1d(np.intersect1d(puzzle[3 * r][3 * c].Candids, puzzle[3 * r + 1][3 * c].Candids, True), puzzle[3 * r + 2][3 * c].Candids, True)
-    ic2 = np.intersect1d(np.intersect1d(puzzle[3 * r][3 * c + 1].Candids, puzzle[3 * r + 1][3 * c + 1].Candids, True), puzzle[3 * r + 2][3 * c + 1].Candids, True)
-    ic3 = np.intersect1d(np.intersect1d(puzzle[3 * r][3 * c + 2].Candids, puzzle[3 * r + 1][3 * c + 2].Candids, True), puzzle[3 * r + 2][3 * c + 2].Candids, True)
-    #getting the union of candids in each column
-    uc1 = np.union1d(np.union1d(puzzle[3 * r][3 * c].Candids, puzzle[3 * r + 1][3 * c].Candids), puzzle[3 * r + 2][3 * c].Candids)
-    uc2 = np.union1d(np.union1d(puzzle[3 * r][3 * c + 1].Candids, puzzle[3 * r + 1][3 * c + 1].Candids), puzzle[3 * r + 2][3 * c + 1].Candids)
-    uc3 = np.union1d(np.union1d(puzzle[3 * r][3 * c + 2].Candids, puzzle[3 * r + 1][3 * c + 2].Candids), puzzle[3 * r + 2][3 * c + 2].Candids)
-    #getting the union of each combination of pairs of unions
-    uc12 = np.union1d(uc1, uc2)
-    uc23 = np.union1d(uc2, uc3)
-    uc31 = np.union1d(uc3, uc1)
-
-    #rows
-    #getting the intersection of candids in each row
-    ir1 = np.intersect1d(np.intersect1d(puzzle[3 * r][3 * c].Candids, puzzle[3 * r][3 * c + 1].Candids, True), puzzle[3 * r][3 * c + 2].Candids, True)
-    ir2 = np.intersect1d(np.intersect1d(puzzle[3 * r + 1][3 * c].Candids, puzzle[3 * r + 1][3 * c + 1].Candids, True), puzzle[3 * r + 1][3 * c + 2].Candids, True)
-    ir3 = np.intersect1d(np.intersect1d(puzzle[3 * r + 2][3 * c].Candids, puzzle[3 * r + 2][3 * c + 1].Candids, True), puzzle[3 * r + 2][3 * c + 2].Candids, True)
-    #getting the union of candids in each row
-    ur1 = np.union1d(np.union1d(puzzle[3 * r][3 * c].Candids, puzzle[3 * r][3 * c + 1].Candids),puzzle[3 * r][3 * c + 2].Candids)
-    ur2 = np.union1d(np.union1d(puzzle[3 * r + 1][3 * c].Candids, puzzle[3 * r + 1][3 * c + 1].Candids),puzzle[3 * r + 1][3 * c + 2].Candids)
-    ur3 = np.union1d(np.union1d(puzzle[3 * r + 2][3 * c].Candids, puzzle[3 * r + 2][3 * c + 1].Candids),puzzle[3 * r + 2][3 * c + 2].Candids)
-    #getting the union of each combination of pairs of unions
-    ur12 = np.union1d(ur1, ur2)
-    ur23 = np.union1d(ur2, ur3)
-    ur31 = np.union1d(ur3, ur1)
-
-    #if at least one of the column-intersections is not an empty set
-    if (ic1.size > 0) | (ic1.size > 0) | (ic3.size > 0):
-        #if the first column has unique elements
-        if np.intersect1d(ic1, uc23).size == 0 and ic1.size > 0:
-            subcol=0
-            col_unique=ic1
-        #if the second column has unique elements
-        if np.intersect1d(ic2, uc31).size == 0 and ic2.size > 0:
-            subcol=1
-            col_unique=ic2
-        #if the third column has unique elements
-        if np.intersect1d(ic3, uc12).size == 0 and ic3.size > 0:
-            subcol=2
-            col_unique=ic3
-        try:
-            #if one of the ifes above was triggered
-            col_unique
-            #go trough the column and remove the candids from other rows
-            for i in range(9):
-                if i<3*r or i>3*r+2:#leave out the rows in which the pointing pairs were detected
-                    puzzle[i][3*c+subcol].remove(col_unique)
-            del col_unique
-        except NameError:#if none of the ifs above were triggered, continue
-            pass
-
-    #if at least one of the row-intersections is not an empty set
-    if (ir1.size > 0) | (ir2.size > 0) | (ir3.size > 0):
-        #if the first row has unique elements
-        if np.intersect1d(ir1, ur23).size == 0 and ir1.size > 0:
-            subrow=0
-            row_unique=ir1
-        #if the second row has unique elements
-        if np.intersect1d(ir2, ur31).size == 0 and ir2.size > 0:
-            subrow=1
-            row_unique=ir2
-        #if the third row has unique elements
-        if np.intersect1d(ir3, ur12).size == 0 and ir3.size > 0:
-            subrow=2
-            row_unique=ir3
-        try:
-            # if one of the ifes above was triggered
-            row_unique
-            # go trough the row and remove the candids from other columns
-            for i in range(9):
-                if i<3*c or i>3*c+2:#leave out the columns in which the pointing pairs were detected
-                    puzzle[r+subrow][i].remove(row_unique)
-            del row_unique
-        except NameError:#if none of the ifs above were triggered, continue
             pass
 
 def pointing_pairs(puzzle, scoordinates):#algoritm for pointing pairs (see: https://www.algoritmy.net/article/1351/Sudoku)
