@@ -11,9 +11,33 @@
 import numpy as np
 import os
 import re
+from itertools import combinations
 ## CLASSES AND FUNCTIONS
 
-#TODO: FIND THE ERROR IN hidden_pair (0,3) is wrongly set to 6 instead of 8
+class hist_el:#class for storing the count of the given candidate number and the positions of its occurrence
+    def __init__(self,num=0):
+        self.Count=num#counter of the current value - 0 by default
+    Coords=np.empty((0, 2), dtype=np.uint8)#occurrences in the given puzzle
+    def add(self,coords):#adds another coordinate to the array of coordinates of the given element
+        if isinstance(coords,tuple) and len(coords)==2:#the coorinates should be added as a 1x2 tuple
+            self.Coords=np.vstack((self.Coords,coords))#add the coordinates
+        else:#throws warning message and does not add the coordinates
+            print('The appended coordinate must be a 1x2 tuple')
+
+class candid_hist:
+    hist=np.ndarray((9,),dtype=np.dtype(hist_el))#creates a histogram of hist_el class elements
+    for i in range(9): hist[i]=hist_el()#initiazes all the elements with its default constructor (Count=0, Coords=0x2 empty array)
+    def __init__(self,position,dim,puzzle):#creates the candidate histogram from the desired group (row, column or square)
+        if dim=='r':
+            for i in range(9):
+                for k in puzzle[position][i].Candids:
+                    hist[k-1].Count+=1#TODO: ITT FOLYTATNI
+        if dim=='c':
+
+        if dim=='s':
+
+        self.Dim=dim
+
 
 class pole:#class in which all the data about the sudoku cell is stored - values, candidates
     def __init__(self, value):
@@ -147,7 +171,7 @@ def purge_candids(puzzle):    # Purging candidates
                     for j in range(3):
                         puzzle[3 * squares_r + i][3 * squares_c + j].remove(puzzle[r][c].Candids)
 
-def exclude_from_rest(puzzle,candidate, position):#function, which removes the value of a cell from the candidates of other cells in the row/column/box it is in, once it is set
+def exclude_from_rest(puzzle, candidate, position):#function, which removes the value of a cell from the candidates of other cells in the row/column/box it is in, once it is set
     #no need to worry abbout removing all the candidates, as it is checked in the .remove method of the pole class
     r,c=(position)#getting the position as 2 variables
     square_r=r//3#getting the row-index of the box
@@ -230,7 +254,7 @@ def naked_pair(puzzle, position, dim):#algoritm for hidden single (see: https://
 
 def hidden_pair(puzzle, coordinates):#algoritm for naked pairs (see: https://www.algoritmy.net/article/1351/Sudoku)
     r, c= coordinates#parse coordinates of the given position
-    if len(puzzle[r][c].Candids)>1:
+    if not puzzle[r][c].is_trivial():
         # determine in which group the given cell is in
         square_r = coordinates[0] // 3
         square_c = coordinates[1] // 3
@@ -243,8 +267,8 @@ def hidden_pair(puzzle, coordinates):#algoritm for naked pairs (see: https://www
                         if np.all(intersect==numbers):
                             coords = np.vstack((coords, [3 * square_r + i, 3 * square_c + j]))
                 except NameError:
-                    coords = np.empty((0, 2), dtype=np.uint8)
-                    numbers = intersect
+                    coords = np.empty((0, 2), dtype=np.uint8)#create an array for storing coorinates
+                    numbers = intersect#get the same numbers, which will be seached for in other cells
         try:
             coords
             for i in range(3):
@@ -483,11 +507,10 @@ paths=np.array([[p_path(p) for p in puzzles],[s_path(s) for s in solutions]]).tr
 
 
 # for g in range(paths.size):
-sequence_in=read_puzzle_txt(paths[3,0])
-sequence_sol=read_solution_txt(paths[3,1])
+sequence_in=read_puzzle_txt(paths[4,0])
+sequence_sol=read_solution_txt(paths[4,1])
 
 length = len(sequence_in)
-
 # check number of elements
 if length != 81 & length != sequence_in.isdigit():
     print('Input is not in the right format or length')
@@ -505,9 +528,14 @@ for i in range(9):
     for j in range(9):
         puzzle[i][j] = pole(vstup[i][j])
 
-## SOLVING STEPS
+#combinations of possible pairs,triples, quad... required for multiple solving functions
+comb_list=[]
+for i in range(2,9):
+    comb_list.append(np.array(list(combinations(list(range(1,9)),i))))
 
-
+###################
+## SOLVING STEPS ##
+###################
 counter = 1
 while not puzzle_is_solved(puzzle) and counter < 20:
 
@@ -515,9 +543,9 @@ while not puzzle_is_solved(puzzle) and counter < 20:
     purge_candids(puzzle)
 
     # Hidden pairs
-    # for i in range(9):
-    #     for j in range(9):
-    #         hidden_pair(puzzle, (i,j))
+    for i in range(9):
+        for j in range(9):
+            hidden_pair(puzzle, (i,j))
 
 
     # Filling singles
@@ -537,9 +565,11 @@ while not puzzle_is_solved(puzzle) and counter < 20:
 
 
     # Naked pairs
-    for i in range(9):
-        for j in range(9):
-            naked_pair(puzzle, (i, j),'s')
+    # for i in range(9):
+    #     for j in range(9):
+    #         naked_pair(puzzle, (i, j), 'r')
+    #         naked_pair(puzzle, (i, j), 'c')
+    #         naked_pair(puzzle, (i, j), 's')
 
 
     # Pointing pairs
