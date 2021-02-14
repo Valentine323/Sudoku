@@ -171,36 +171,62 @@ def set_trivials(puzzle):#the work of this function may be redundant by introduc
                 puzzle[r][c].set(puzzle[r][c].Candids[0])
                 exclude_from_rest(puzzle, puzzle[r][c].Candids[0], (r, c))
 
-def naked_pair(puzzle, coordinates):#algoritm for naked pairs (see: https://www.algoritmy.net/article/1351/Sudoku)
-    r, c= coordinates#parse coordinates of the given position
-    if len(puzzle[r][c].Candids)>1:
-        # determine in which group the given cell is in
-        square_r = coordinates[0] // 3
-        square_c = coordinates[1] // 3
-        for i in range(3):
-            for j in range(3):
-                #if the two,three,four... cells have the same candidades
-                if np.array_equal(puzzle[r][c].Candids, puzzle[3 * square_r + i, 3 * square_c + j].Candids):
-                    try:
-                        coords
-                        coords = np.vstack((coords, [3 * square_r + i, 3 * square_c + j]))
-                    except NameError:
-                        coords = np.empty((0, 2), dtype=np.uint8)
-                        coords = np.vstack((coords, [3 * square_r + i, 3 * square_c + j]))
-        try:
-            coords#if there were cells with same candidates found
-            #if there is as many cells with the same candidates as there are candidates (2 same candidates in 2 cells in 1 group, 3same candidates in 3 cells... etc.)
-            if coords.shape[0] == len(puzzle[r][c].Candids):
-                for i in range(3):
-                    for j in range(3):
-                        if not ((coords == [3 * square_r + i, 3 * square_c + j]).all(axis=1)).any() and len(puzzle[3 * square_r + i][3 * square_c + j].Candids)>0:#if cell is not one of those, which contain the candidates
-                            # print('From position [{}][{}]  Deleted candids:{}'.format(3 * square_r + i, 3 * square_c + j, puzzle[r][c].Candids))
-                            puzzle[3 * square_r + i][3 * square_c + j].remove(puzzle[r][c].Candids)#remove candidates
-        except NameError:
-            pass
-    # else:  # if the cell is trivial, set its value  ----- IF AN ERROR OCCURES IN THE FUTURE - CHECK THIS
-    #     if np.isnan(puzzle[r][c].Value):
-    #         puzzle[r][c].set(puzzle[r][c].Candids[0])
+def naked_pair(puzzle, position, dim):#algoritm for hidden single (see: https://www.algoritmy.net/article/1351/Sudoku)
+    r, c = (position)#position of the current element
+    if not puzzle[r][c].is_trivial():# if it has more than one candidates
+        coords = np.empty((0, 2), dtype=np.uint8)  # array to store coordinates of naked pairs
+        #CHECKING THE CONDITIONS FOR 'NAKED PAIR'
+        # in row
+        if dim == 'r' or dim == 'row':
+            # loop trough the row
+            for i in range(9):
+                # if all the candidates are the same
+                if np.all(puzzle[r][c].Candids == puzzle[r][i].Candids):
+                    coords = np.vstack((coords, [r, i]))  # add the coordinate of the current cell
+                # if the number of cells with the same candidates is the same as there is candidates (condition for naked pair)
+                if coords.shape[0] == len(puzzle[r][c].Candids):
+                    # loop trough the row
+                    for i in range(9):
+                        # if the givel cell is not one of the cells with the same candidates
+                        if not ((r, i) == coords).any(axis=1).any():
+                            puzzle[r][i].remove(puzzle[r][c].Candids)  # remove the candidates from those cells
+
+        # in column
+        if dim == 'c' or dim == 'col':
+            #loop trough the column
+            for i in range(9):
+                #if all the candidates are the same
+                if np.all(puzzle[r][c].Candids == puzzle[i][c].Candids):
+                    coords = np.vstack((coords, [i, c]))#add the coordinate of the current cell
+                #if the number of cells with the same candidates is the same as there is candidates (condition for naked pair)
+                if coords.shape[0] == len(puzzle[r][c].Candids):
+                    #loop trough the column
+                    for i in range(9):
+                        #if the givel cell is not one of the cells with the same candidates
+                        if not ((i,c)==coords).any(axis=1).any():
+                            puzzle[i][c].remove(puzzle[r][c].Candids)#remove the candidates from those cells
+
+        # in region
+        if dim == 's' or dim == 'square':
+            # determine in which group the given cell is in
+            square_r = r // 3
+            square_c = c // 3
+            #loop trough the square
+            for i in range(3):
+                for j in range(3):
+                    #if all the candidates are the same
+                    if np.all(puzzle[r][c].Candids == puzzle[3 * square_r + i][3 * square_c + j].Candids):
+                        coords = np.vstack((coords, [3 * square_r + i, 3 * square_c + j]))#add the coordinate of the current cell
+                #if the number of cells with the same candidates is the same as there is candidates (condition for naked pair)
+                if coords.shape[0] == len(puzzle[r][c].Candids):
+                    #loop trough the square
+                    for i in range(3):
+                        for j in range(3):
+                            #if the givel cell is not one of the cells with the same candidates
+                            if not ((i,j)==coords).any(axis=1).any():
+                                puzzle[i][j].remove(puzzle[r][c].Candids)#remove the candidates from those cells
+    else:
+        exclude_from_rest(puzzle, puzzle[r][c].Candids[0], (r, c))
 
 def hidden_pair(puzzle, coordinates):#algoritm for naked pairs (see: https://www.algoritmy.net/article/1351/Sudoku)
     r, c= coordinates#parse coordinates of the given position
@@ -457,8 +483,8 @@ paths=np.array([[p_path(p) for p in puzzles],[s_path(s) for s in solutions]]).tr
 
 
 # for g in range(paths.size):
-sequence_in=read_puzzle_txt(paths[4,0])
-sequence_sol=read_solution_txt(paths[4,1])
+sequence_in=read_puzzle_txt(paths[3,0])
+sequence_sol=read_solution_txt(paths[3,1])
 
 length = len(sequence_in)
 
@@ -488,9 +514,11 @@ while not puzzle_is_solved(puzzle) and counter < 20:
     # Purging candidates
     purge_candids(puzzle)
 
-    for i in range(9):
-        for j in range(9):
-            hidden_pair(puzzle, (i,j))
+    # Hidden pairs
+    # for i in range(9):
+    #     for j in range(9):
+    #         hidden_pair(puzzle, (i,j))
+
 
     # Filling singles
     #theoretically it could go in the for cycles above with an elif
@@ -498,10 +526,6 @@ while not puzzle_is_solved(puzzle) and counter < 20:
     #     for c in range(9):
     #         if puzzle[r][c].is_trivial():
     #             puzzle[r][c].set(puzzle[r][c].Candids[0])
-
-    # for r in range(9):
-    #     for c in range(9):
-    #         print(str([r,c])+':'+str(puzzle[r][c].Candids)+'\n')
 
 
     # Filling hidden singles
@@ -513,9 +537,9 @@ while not puzzle_is_solved(puzzle) and counter < 20:
 
 
     # Naked pairs
-    # for i in range(9):
-    #     for j in range(9):
-    #         naked_pair(puzzle, (i, j))
+    for i in range(9):
+        for j in range(9):
+            naked_pair(puzzle, (i, j),'s')
 
 
     # Pointing pairs
